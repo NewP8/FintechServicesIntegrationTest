@@ -60,7 +60,6 @@ describe("Core", function() {
 	}
 
 	it('should create user', function() {
-	    con
 		const idemKey = `user_${Math.random()}`;
 		console.log(idemKey + ";" + api.core.CLIENT_TENANT_ID);
 		return api.account.createUserFintech(
@@ -69,7 +68,7 @@ describe("Core", function() {
 			api.core.CLIENT_TENANT_ID,
 			userRequest)
 		.then (function(user) {
-
+            console.log(user)
 			expect(user).to.include({tenantId: api.core.CLIENT_TENANT_ID})
 			expect(user).to.include(userRequest)
 			expect(user).to.have.property('created')
@@ -100,7 +99,7 @@ describe("Core", function() {
               	tags: "MY MASTER"
               })
           .then(function(account) {
-
+            console.log("re:" + JSON.stringify(account))
             expect(account).to.include({
                 tenantId: api.core.CLIENT_TENANT_ID,
                 ownerId: state.userObject.userId,
@@ -128,13 +127,15 @@ describe("Core", function() {
         });
     });
 
-
+  /*
   it('should create user token', function() {
     return api.core.createUserToken(
       state.token,
       api.core.CLIENT_TENANT_ID,
       state.userObject.userId)
     .then (function(userToken) {
+
+      console.log("aaa:" + JSON.stringify(userToken))
       expect(userToken).to.include({tenantId: api.core.CLIENT_TENANT_ID,
         userId: state.userObject.userId})
 
@@ -143,6 +144,7 @@ describe("Core", function() {
       console.log(`userToken: ${userToken.token}`)
     });
   });
+  */
 
 
 });

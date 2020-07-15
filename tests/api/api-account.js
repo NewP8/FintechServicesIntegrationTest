@@ -17,10 +17,9 @@ function createUserFintech(fintechToken, idempotencyKey, tenantId, userRequest) 
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
     .set('Idempotency-Key', idempotencyKey)
-    //.expect('Content-Type', /json/)
-    //.expect(200)
+    .expect('Content-Type', /json/)
+    .expect(200)
     .then(result => {
-      console.log(result);
       const user = result.body;
       expect(user).to.be.an('object', "Couldn't get user");
       return user;
@@ -56,18 +55,15 @@ function getUserPictureFromId(fintechToken, tenantId, userId) {
 }
 
 function addPersonalAccountFintech(fintechToken, idempotencyKey, tenantId, ownerId, request) {
-  console.log(fintechToken);
   return baseUrl
-    .post(`/rest/v1/fintech/tenants/${tenantId}/users/${ownerId}/accounts`)
+    .post(`/rest/v1/account/tenants/${tenantId}/personal/${ownerId}/accounts`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
-    .expect('Content-Type', /json/)
+    //.expect('Content-Type', /json/)
     //.expect(200)
     .then(result => {
-      debugger;
-	  console.log("-----" + result);
       const account = result.body;
       expect(account).to.be.an('object', "Couldn't get account");
       return account;
@@ -77,15 +73,15 @@ function addPersonalAccountFintech(fintechToken, idempotencyKey, tenantId, owner
 
 function updatePersonalAccountFintech(fintechToken, tenantId, ownerId, accountId, request) {
   return baseUrl
-    .put(`/rest/v1/fintech/tenants/${tenantId}/users/${ownerId}/accounts/${accountId}`)
+    .put(`/rest/v1/account/tenants/${tenantId}/personal/${ownerId}/accounts/${accountId}`)
     .send(request)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
     .expect('Content-Type', /json/)
-    //.expect(200)
+    .expect(200)
     .then(result => {
       const account = result.body;
-      //expect(account).to.be.an('object', "Couldn't get account");
+      expect(account).to.be.an('object', "Couldn't get account");
       return account;
     });
 }

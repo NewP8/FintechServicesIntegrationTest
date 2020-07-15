@@ -1,0 +1,5169 @@
+swagger: '2.0'
+info:
+  title: Fintech Platform API
+  description: >
+    The Fintech Platform API is a REST API that allowing you to create users accounts and
+    make online payment processing. The API uses resource-oriented URLs, HTTP
+    authentication and HTTP response codes to indicate API errors. JSON is
+    returned by all API responses."
+  contact:
+    name: API Support
+    email: tiziano.cappellari@upcopay.it
+  version: 0.4.0
+host: api.sandbox.lightbankingservices.com
+schemes:
+  - https
+securityDefinitions:
+  Basic:
+    description: |
+      Encode the consumer key and the consumer secret according to RFC 173.
+      1. Concatenate the client id, a colon character ”:”, and the
+         client secret into a single string.
+
+      2. Base64 encode the string from the previous step.
+    type: basic
+  OauthSecurityApplication:
+    type: oauth2
+    flow: application
+    tokenUrl: 'https://api.sandbox.lightbankingservices.com/rest/v1/oauth2/token'
+    scopes:
+      client: Client scope
+
+produces:
+  - application/json
+
+########## OAuth2 token ##########
+
+paths:
+  '/rest/v1/oauth2/token':
+    get:
+      summary: Obtain a bearer token
+      description: >
+        Allows a registered application to obtain an OAuth 2 Bearer Token, which
+        can be used to make API requests on an application's own behalf.
+
+        This is based on the Client Credentials Grant flow of the OAuth 2
+        specification. You can choose this mode by setting the parameter
+        grant_type to 'client_credentials' and scope to 'client'.
+      operationId: Token
+      security:
+        - Basic: []
+      tags:
+        - Token
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: grant_type
+          in: query
+          type: string
+          description: 'Grant type'
+        - name: scope
+          in: query
+          type: array
+          items:
+            type: string
+          description: 'Scope'
+      responses:
+        '200':
+          description: token
+          schema:
+            type: string
+        '401':
+          description: Invalid credentials error message
+          schema:
+            type: string
+
+
+
+########## Users ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/users':
+    post:
+      summary: Create a User object
+      description: >-
+        Create a User object.
+        Events raised: USER_CREATED_EVENT (see Webhook)
+      operationId: PostUsers
+      tags:
+        - Users
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing
+            the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: User Request object.
+          required: true
+          schema:
+            $ref: '#/definitions/UserRequest'
+      responses:
+        '200':
+          description: User object created.
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    get:
+      summary: Returns the users created.
+      description: >-
+        Returns the users created.
+        The array in response will have a maximum length based on the limit
+        parameter (default 5, max 100). The response value count may exceed the limit,
+        therefore subsequent API requests may be necessary.
+      operationId: GetUsers
+      tags:
+        - Users
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Users to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Users to return
+      responses:
+        '200':
+          description: Array of User objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}':
+    get:
+      summary: Find the specified User object.
+      description: >-
+        Find the specified User object.
+        Events raised: USER_UPDATED_EVENT (see Webhook)
+      operationId: Getuser
+      tags:
+        - Users
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique id of the User to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: User object.
+          schema:
+            $ref: '#/definitions/User'
+        '404':
+          description: >-
+            User with specified userId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    put:
+      summary: Update a User object.
+      description: >-
+        Update a User object.
+        Set only params that you want to update.
+        Events raised: USER_UPDATED_EVENT (see Webhook)
+      operationId: PutUsers
+      tags:
+        - Users
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User Unique Id of the User to update
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: User object
+          required: true
+          schema:
+            $ref: '#/definitions/UserRequest'
+      responses:
+        '200':
+          description: User updated.
+          schema:
+            $ref: '#/definitions/User'
+        '404':
+          description: >-
+            User with specified userId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/picture':
+    get:
+      summary: Get the user picture.
+      description: >-
+        Get the user picture as byte array. To get the picture you have to create a bucket and post a file with the picture and update the picture parameter of user object with the bucket object id.
+      operationId: GetuserPicture
+      tags:
+        - Users
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique id of the User to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: User picture.
+          schema:
+            type: string
+            format: byte
+        '404':
+          description: >-
+            User with specified userId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+
+########## User Documents ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/documents':
+    post:
+      summary: Create a User Document object.
+      description: >-
+        Create a User Document object.
+        Events raised: USER_DOCUMENT_CREATED_EVENT (see Webhook)
+      operationId: PostUserDocuments
+      tags:
+        - UserDocuments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User Unique Id of the User to update
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing
+            the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: User Documents Request object.
+          required: true
+          schema:
+            $ref: '#/definitions/UserDocumentRequest'
+      responses:
+        '200':
+          description: User Document object created.
+          schema:
+            $ref: '#/definitions/UserDocument'
+        '404':
+          description: >-
+            User with specified userId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Returns user documents created.
+      description: >-
+        Returns the user documents created. The array in response will have a maximum length based on the limit parameter (default 5, max 100). The response value count may exceed the limit, therefore subsequent API requests may be necessary.
+      operationId: GetUserDocuments
+      tags:
+        - UserDocuments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User Unique Id of the User to update
+          required: true
+          type: string
+          format: uuid
+        - name: documentId
+          in: path
+          description: Fintech Platform Document unique id of the User Document to retrieve
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of User Documents to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of User Documents to return
+      responses:
+        '200':
+          description: Array of User Documents objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/UserDocument'
+        '404':
+          description: >-
+            User Document with specified userId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/documents/{documentId}':
+    get:
+      summary: Find the specified User Document object.
+      description: >-
+        Find the specified User Document object.
+      operationId: GetUserDocument
+      tags:
+        - UserDocuments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User Unique Id of the User to update
+          required: true
+          type: string
+          format: uuid
+        - name: documentId
+          in: path
+          description: Fintech Platform Document unique id of the User Document
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: User Document object.
+          schema:
+            $ref: '#/definitions/UserDocument'
+        '404':
+          description: >-
+            User Document with specified userId and documentId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+              
+              
+########## Enterprises ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises':
+    post:
+      summary: Create an Enterprise object
+      description: >-
+        Create an Enterprise object.
+        Events raised: ENTERPRISE_CREATED_EVENT (see Webhook)
+      operationId: PostEnterprises
+      tags:
+        - Enterprises
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing
+            the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Enterprise Request object.
+          required: true
+          schema:
+            $ref: '#/definitions/EnterpriseRequest'
+      responses:
+        '200':
+          description: Enterprise object created.
+          schema:
+            $ref: '#/definitions/Enterprise'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    get:
+      summary: Returns the enterprises created.
+      description: >-
+        Returns the enterprises created.
+        The array in response will have a maximum length based on the limit
+        parameter (default 5, max 100). The response value count may exceed the limit,
+        therefore subsequent API requests may be necessary.
+      operationId: GetEnterprises
+      tags:
+        - Enterprises
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Enterprises to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Enterprises to return
+      responses:
+        '200':
+          description: Array of Enterprise objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Enterprise'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}':
+    get:
+      summary: Find the specified Enterprise object.
+      description: >-
+        Find the specified Enterprise object.
+        Events raised: ENTERPRISE_UPDATED_EVENT (see Webhook)
+      operationId: Getenterprise
+      tags:
+        - Enterprises
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique id of the Enterprise to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Enterprise object.
+          schema:
+            $ref: '#/definitions/Enterprise'
+        '404':
+          description: >-
+            Enterprise with specified enterpriseId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    put:
+      summary: Update a Enterprise object.
+      description: >-
+        Update a Enterprise object.
+        Set only params that you want to update.
+        Events raised: ENTERPRISE_UPDATED_EVENT (see Webhook)
+      operationId: PutEnterprises
+      tags:
+        - Enterprises
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise Unique Id of the Enterprise to update
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Enterprise object
+          required: true
+          schema:
+            $ref: '#/definitions/EnterpriseRequest'
+      responses:
+        '200':
+          description: Enterprise updated.
+          schema:
+            $ref: '#/definitions/Enterprise'
+        '404':
+          description: >-
+            Enterprise with specified enterpriseId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/logo':
+    get:
+      summary: Get the enterprise logo.
+      description: >-
+        Get the enterprise logo as byte array. To get the logo you have to create a bucket and post a file with the logo and update the businessLogo parameter of enterprise object with the bucket object id.
+      operationId: GetuserLogo
+      tags:
+        - Enterprises
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique id of the Enterprise to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Enterprise logo.
+          schema:
+            type: string
+            format: byte
+        '404':
+          description: >-
+            Enterpsise with specified enterpriseId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Enterprise Documents ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/documents':
+    post:
+      summary: Create a Enterprise Document object.
+      description: >-
+        Create a Enterprise Document object.
+        Events raised: ENTERPRISE_DOCUMENT_CREATED_EVENT (see Webhook)
+      operationId: PostEnterpriseDocuments
+      tags:
+        - EnterpriseDocuments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise Unique Id of the Enterprise to update
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing
+            the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Enterprise Documents Request object.
+          required: true
+          schema:
+            $ref: '#/definitions/EnterpriseDocumentRequest'
+      responses:
+        '200':
+          description: Enterprise Document object created.
+          schema:
+            $ref: '#/definitions/EnterpriseDocument'
+        '404':
+          description: >-
+            Enterprise with specified enterpriseId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Returns enterprise documents created.
+      description: >-
+        Returns the enterprise documents created. The array in response will have a maximum length based on the limit parameter (default 5, max 100). The response value count may exceed the limit, therefore subsequent API requests may be necessary.
+      operationId: GetEnterpriseDocuments
+      tags:
+        - EnterpriseDocuments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise Unique Id of the Enterprise to update
+          required: true
+          type: string
+          format: uuid
+        - name: documentId
+          in: path
+          description: Fintech Platform Document unique id of the Enterprise Document to retrieve
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Enterprise Documents to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Enterprise Documents to return
+      responses:
+        '200':
+          description: Array of Enterprise Documents objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/EnterpriseDocument'
+        '404':
+          description: >-
+            Enterprise Document with specified enterpriseId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/documents/{documentId}':
+    get:
+      summary: Find the specified Enterprise Document object.
+      description: >-
+        Find the specified Enterprise Document object.
+      operationId: GetEnterpriseDocument
+      tags:
+        - EnterpriseDocuments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise Unique Id of the Enterprise to update
+          required: true
+          type: string
+          format: uuid
+        - name: documentId
+          in: path
+          description: Fintech Platform Document unique id of the Enterprise Document
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Enterprise Document object.
+          schema:
+            $ref: '#/definitions/EnterpriseDocument'
+        '404':
+          description: >-
+            Enterprise Document with specified enterpriseId and documentId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+              
+              
+
+
+########## User Accounts ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/accounts':
+    post:
+      summary: Create an Account object.
+      description: >-
+        Create an Account object.
+        There is a limit of one account per User.
+        There are three levels of accounts:
+        Level 1: Transactions worth less than 2,500€ for cash-in and/or 1,000€ for cash-out accumulated per legal year.
+        Level 2: Transactions worth more than 2,500€ for cash-in and/or 1,000€ for cash-out accumulated per legal year but with credit and debit transactions worth less than 15,000€.
+        Level 3: For credit and debit transactions worth more than 15,000€.
+        A new user account is created as Level 1 and it needs at least the following User object information: email, name, surname, birthday, nationality and countryOfResidence; otherwise an error is throw.
+        User account can be later upgraded setting the status to REQUEST_UPGRADE_TO_LEVEL2 or REQUEST_UPGRADE_TO_LEVEL3 using a 'PUT' request.
+        Notice that: level 2 can be created only if User object contains all the informations of Type 1, and at least the following information: cityOfResidence, addressOfResidence, postalCode and the Document object contain a valided Identity Card Document (see document object)
+        Level 3 can be created only if User object contains all the informations of Type 1 and 2, and at least the following information: occupation, incomeRange.
+      operationId: PostAccounts
+      tags:
+        - Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique Id of the Owner of the Account to create
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: User Account Request object.
+          required: true
+          schema:
+            $ref: '#/definitions/PersonalAccountAddRequest'
+      responses:
+        '200':
+          description: User Account created.
+          schema:
+            $ref: '#/definitions/PersonalAccount'
+        '402':
+          description: More than one account for User was created or the external Account Service Provider rise an error. (error codes= max_accounts_exceeded, asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '404':
+          description: >-
+            User Document with specified userId and documentId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    get:
+      summary: Returns the User Accounts created.
+      description: >-
+        Returns all user Accounts created.
+      operationId: GetUserAccounts
+      tags:
+        - Account
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique id of the User that own the Account to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: User Accounts list
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PersonalAccount'
+        '404':
+          description: User Account with specified userId and accountId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/accounts/{accountId}':
+    get:
+      summary: Find the specified User Account object.
+      operationId: GetUserAccount
+      tags:
+        - Account
+      security:
+        - OauthSecurityApplication:
+            - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique id of the User that own the document to retrieve
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech platform Account unique Id of the User Account to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: User Account object.
+          schema:
+            $ref: '#/definitions/PersonalAccount'
+        '404':
+          description: User Account with specified userId and accountId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    put:
+      summary: Update User Account
+      description: >-
+        Update Account object.
+        Set the status parameter to REQUEST_UPGRADE_TO_LEVEL2 or REQUEST_UPGRADE_TO_LEVEL3.
+        Level 2 can be created only if User object contains all the information of Type 1 and at least the following information: cityOfResidence, addressOfResidence, postalCode and has a validated Identity Document.
+        Level 3 can be created only if User object contains all the informations of Type 1 and 2 and at least the following information: occupation, incomeRange.
+        Notice that to have a validated User Identity Document the AccountKYC object must have the status equal to "VALIDATED"
+
+        Events raised: ACCOUNT_PERSONAL_UPDATE_EVENT (see Webhook)
+      operationId: PutUserAccounts
+      tags:
+        - Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique Id of the Owner of the Account to update
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Account object
+          required: true
+          schema:
+            $ref: '#/definitions/PersonalAccountUpdateRequest'
+      responses:
+        '200':
+          description: Account object created
+          schema:
+            $ref: '#/definitions/PersonalAccount'
+        '404':
+          description: User with specified userId was not found. (error code = resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: The external Account Service Provider rise an error(error codes= asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+              
+              
+########## Enterprise Accounts ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/accounts':
+    post:
+      summary: Create an Account object.
+      description: >-
+        Create an Account object.
+        There is a limit of one account per Enterprise.
+        There are three levels of accounts:
+        Level 1: Transactions worth less than 2,500€ for cash-in and/or 1,000€ for cash-out accumulated per legal year.
+        Level 2: Transactions worth more than 2,500€ for cash-in and/or 1,000€ for cash-out accumulated per legal year but with credit and debit transactions worth less than 15,000€.
+        Level 3: For credit and debit transactions worth more than 15,000€.
+        A new user account is created as Level 1 and it needs at least the following User object information: email, name, surname, birthday, nationality and countryOfResidence; otherwise an error is throw.
+        User account can be later upgraded setting the status to REQUEST_UPGRADE_TO_LEVEL2 or REQUEST_UPGRADE_TO_LEVEL3 using a 'PUT' request.
+        Notice that: level 2 can be created only if User object contains all the informations of Type 1, and at least the following information: cityOfResidence, addressOfResidence, postalCode and the Document object contain a valided Identity Card Document (see document object)
+        Level 3 can be created only if Enterprise object contains all the informations of Type 1 and 2, and at least the following information: occupation, incomeRange.
+      operationId: PostEnterpriseAccounts
+      tags:
+        - Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique Id of the Owner of the Account to create
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Enterprise Account Request object.
+          required: true
+          schema:
+            $ref: '#/definitions/BusinessAccountAddRequest'
+      responses:
+        '200':
+          description: Enterprise Account created.
+          schema:
+            $ref: '#/definitions/BusinessAccount'
+        '402':
+          description: More than one account for Enterprise was created or the external Account Service Provider rise an error. (error codes= max_accounts_exceeded, asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '404':
+          description: >-
+            Enterprise Document with specified userId and documentId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    get:
+      summary: Returns the Enterprise Accounts created.
+      description: >-
+        Returns all enterprise Accounts created.
+      operationId: GetEnterpriseAccounts
+      tags:
+        - Account
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique id of the Enterprise that own the Account to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Enterprise Accounts list
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BusinessAccount'
+        '404':
+          description: User Account with specified userId and accountId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/accounts/{accountId}':
+    get:
+      summary: Find the specified Enterprise Account object.
+      operationId: GetEnterpriseAccount
+      tags:
+        - Account
+      security:
+        - OauthSecurityApplication:
+            - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique id of the Enterprise that own the document to retrieve
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech platform Account unique Id of the Enterprise Account to retrieve
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Enterprise Account object.
+          schema:
+            $ref: '#/definitions/BusinessAccount'
+        '404':
+          description: Enterprise Account with specified enterpriseId and accountId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    put:
+      summary: Update Enterprise Account
+      description: >-
+        Update Account object.
+        Set the status parameter to REQUEST_UPGRADE_TO_LEVEL2 or REQUEST_UPGRADE_TO_LEVEL3.
+        Level 2 can be created only if User object contains all the information of Type 1 and at least the following information: cityOfResidence, addressOfResidence, postalCode and has a validated Identity Document.
+        Level 3 can be created only if User object contains all the informations of Type 1 and 2 and at least the following information: occupation, incomeRange.
+        Notice that to have a validated Enterprise Identity Document the AccountKYC object must have the status equal to "VALIDATED"
+
+        Events raised: ACCOUNT_BUSINESS_UPDATE_EVENT (see Webhook)
+      operationId: PutEnterpriseAccounts
+      tags:
+        - Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique Id of the Owner of the Account to update
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Account object
+          required: true
+          schema:
+            $ref: '#/definitions/BusinessAccountUpdateRequest'
+      responses:
+        '200':
+          description: Account object created
+          schema:
+            $ref: '#/definitions/BusinessAccount'
+        '404':
+          description: Enterprise with specified enterpriseId was not found. (error code = resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: The external Account Service Provider rise an error(error codes= asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+              
+
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/balance':
+    get:
+      summary: Account Balance
+      description: >-
+        Owner Account Balance where balance represent the total amount of money that the Account Owner own and
+        availableBalance represent the amount of money that the Account Owner can spend (eg. to transfer, cash-out)
+        The difference between amount and availableBalance represent the amount of money deposited on an escrow account
+        waiting for the first phase of the campaign ends.
+      operationId: GetAccountBalance
+      tags:
+        - Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique Id
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account object created
+          schema:
+            $ref: '#/definitions/AccountBalance'
+        '404':
+          description: User with specified userId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: The external Account Service Provider rise an error. (error codes= asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Accounts KYC ##########
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycs':
+    post:
+      summary: Request needed to begin a KYC procedure
+      description: >-
+        Request needed to begin a KYC procedure.The procedure can take from 2h to 2 days to complete.
+        After the completion (event raised: ACCOUNT_KYC_UPDATED_EVENT) the status of the request will be VALIDATED or INVALID.
+        Only if VALIDATED the account can be upgraded to LEVEL2 or LEVEL3.
+        In case of INVALID response, the error field contains the motivation, that would be one of this error codes:
+          kyc_document_unreadable
+          kyc_document_not_accepted
+          kyc_document_has_expired
+          kyc_document_incomplete
+          kyc_document_missing
+          kyc_document_do_not_match_user_data
+          kyc_document_do_not_match_account_data
+          kyc_document_falsified
+          kyc_underage_person
+          kyc_specific_case
+          kyc_uncodified_error
+
+        Events raised: (see Webhook)
+            - ACCOUNT_KYC_ADDED_EVENT when request sent
+            - ACCOUNT_KYC_UPDATED_EVENT when validation process is completed
+      operationId: PostAccountKYC
+      tags:
+        - Account KYC
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Account KYC Request object containing documentId, Fintech Platform Document unique id of the User Document
+          required: true
+          schema:
+            $ref: '#/definitions/AccountKYCRequest'
+      responses:
+        '200':
+          description: AccountKYC object.
+          schema:
+            $ref: '#/definitions/AccountKYC'
+        '404':
+          description: >-
+            User Account with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Account KYC created.
+      description: Returns the Account KYC requests created.
+      operationId: GetAccountKYCs
+      tags:
+        - Account KYC
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Array of AccountKYC object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AccountKYC'
+        '404':
+          description: >-
+            User Account with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycs/{kycId}':
+    get:
+      summary: Find the specified Account KYC.
+      description: Find the specified Account KYC request.
+      operationId: GetAccountKYC
+      tags:
+        - Account KYC
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: kycId
+          in: path
+          description: Fintech Platform KYC Unique Id of the validation request
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account KYC object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AccountKYC'
+        '404':
+          description: >-
+            User Account KYC with specified userId, accountId and kycId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycRequiredDocuments':
+    get:
+      summary: Documents type required for the KYC process
+      description: >-
+        Return documents type required for the KYC process.
+        Notice that the Nationality of User (userId) is mandatory.
+      operationId: GetKYCDocumentsTypeRequired
+      tags:
+        - Account KYC
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account KYC Required Documents.
+          schema:
+            $ref: '#/definitions/AccountKYCDocumentsRequired'
+        '404':
+          description: >-
+            User Account with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Cards ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards':
+    post:
+      summary: Link a new Card (Debit/Credit) to User Account.
+      description: >-
+        Link a new Card (Debit/Credit) to User Account.
+        After linking the Card you must perform a Cash In within 30min maximum.
+        After that the status parameter change to "VALIDATED". Then, it is available up to the expiry date.
+        You have to set the Card alias (e.g. first 6 charactes followed by *), the expiration date and the currency of Card.
+        The AccountLinkedCard obtained contains the tspRefs parameter (a json stringifield) filled with all the information that you will
+        use to contact the Tokenizer Service Provider (TSP). The reply of TSP must be sent to Fintech Platform through
+        the updateAccountLinkedCardTSPRefsFromId request.
+        Please refer to Fintech Platform Mobile SDK for details.
+
+        Events raised: ACCOUNT_LINKED_CARD_ADDED_EVENT (see Webhook)
+      operationId: PostLinkedCard
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: New Card (Debit/Credit) to be linked to User Account
+          required: true
+          schema:
+            $ref: '#/definitions/AccountLinkedCardRequest'
+      responses:
+        '200':
+          description: AccountKYC object.
+          schema:
+            $ref: '#/definitions/AccountLinkedCard'
+        '404':
+          description: >-
+            User Account Linked Card with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: The external Account Service Provider rise an error. (error codes= asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Account Linked Cards.
+      description: Returns the Account Linked Cards created
+      operationId: GetCards
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Array of Account Linked Cards created.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AccountLinkedCard'
+        '404':
+          description: >-
+            User Account Linked Card with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}':
+    get:
+      summary: Specific Account Linked Card.
+      description: Find the specified Account Linked Card.
+      operationId: GetSpecificCards
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Card unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account Linked Card object.
+          schema:
+            $ref: '#/definitions/AccountLinkedCard'
+        '404':
+          description: >-
+            User Account Linked Card with specified userId, accountId and cardId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    put:
+      summary: Update the Account Linked Card with the reply of TSP.
+      description: >-
+        Update the Account Linked Card with the reply of TSP.
+        Events raised: ACCOUNT_LINKED_CARD_UPDATED_EVENT (see Webhook)
+      operationId: PutLinkedCard
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Card unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Account object
+          required: true
+          schema:
+            type: object
+            properties:
+              tspPayload:
+                description: tspPayload
+                type: string
+      responses:
+        '200':
+          description: Account Linked Cards created.
+          schema:
+            $ref: '#/definitions/AccountLinkedCard'
+        '404':
+          description: User Account Linked Card with specified userId, accountId and cardId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: The external Account Service Provider rise an error. (error codes= asp_generic_error, asp_specific_error, asp_invalid_card_number, asp_invalid_cardholder_name, asp_invalid_pin_code, asp_invalid_pin_format, asp_card_registration_errors, asp_fraud_policy_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    delete:
+      summary: Remove the Account Linked Card.
+      description: >-
+        Remove linked card.
+        Events raised: ACCOUNT_LINKED_CARD_DELETED_EVENT (see Webhook)
+      operationId: DeleteLinkedCard
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - users
+            - enterprises
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Card unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account Linked Cards deleted.
+        '404':
+          description: User Account Linked Card with specified userId, accountId and cardId was not found. (error code= resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCardsTestCards':
+    get:
+      summary: Obtain a list of Test Cards (Debit/Credit) that can be used to Sandbox environment.
+      description: >-
+        * Sanbox only *
+        Obtain a list of Test Cards (Debit/Credit) that can be used to Sandbox environment.
+      operationId: GetTestCards
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: List of Debit/Credit Cards
+          schema:
+            $ref: '#/definitions/CardTest'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/default':
+    put:
+      summary: Set the default Card.
+      description: >-
+        Set the default Card. All other cards linked to the same account
+        will be set to default = false.
+
+        Events raised: ACCOUNT_LINKED_CARD_DEFAULT_UPDATED_EVENT (see Webhook)
+      operationId: EditDefaultCards
+      tags:
+        - Cards
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Card unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account Linked Card object.
+          schema:
+            $ref: '#/definitions/AccountLinkedCard'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Cash In ##########
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashIns':
+    post:
+      summary: Transfer money from Linked Card to Account.
+      description: >-
+        Transfer money from Linked Card cardId to Account accountId.
+        You have to set the amount and currency to transfer.
+        If the Card issuer request to perform a Secure3D procedure, you have to redirect the user to the redirectURL web page.
+        Check the secure3Drequired flag to know if you need to perform the Secure3D procedure.
+        The cash in status goes directly from REQUEST to SUCCEEDED (or FAILED) in case of no 3Dsecure required.
+        Otherwise the status goes from REQUEST to CREATED and only after the 3D procedure is completed goes to SUCCEEDED (or FAILED).
+        Register to ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_UPDATE_EVENT Event (see Webhook) to keep track of status changes.
+        Events raised: ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_ADDED_EVENT (see Webhook)
+      operationId: PostCashIn
+      tags:
+        - Cash In
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Linked Card unique Id linked to accountId
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Amount money to tranfer into Account
+          required: true
+          schema:
+            type: object
+            properties:
+              amout:
+                $ref: '#/definitions/Money'
+      responses:
+        '200':
+          description: Linked Card Cash In object.
+          schema:
+            $ref: '#/definitions/LinkedCardCashIn'
+        '404':
+          description: >-
+            User Account Linked Card with specified userId, accountId and cardId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: >-
+            The external Account Service Provider rise an error.
+            (error codes: asp_generic_error, asp_specific_error,
+            asp_transaction_amount_is_higher_than_maximum_permitted_amount, asp_transaction_amount_is_lower_than_lower_permitted_amount
+            asp_invalid_transaction_amount, asp_creditedfunds_must_be_more_than_0, asp_the_card_has_expired, asp_the_card_is_inactive
+            asp_maximum_amount_exceeded, asp_maximum_uses_exceeded, asp_debit_limit_exceeded, asp_transaction_refused
+            asp_secure_mode_3dsecure_authentication_has_failed, asp_secure_mode_the_card_is_not_enrolled_with_3dsecure,
+            asp_secure_mode_card_not_compatible_with_3dsecure, asp_secure_mode_3dsecure_authentication_session_has_expired
+            asp_secure_mode_3dsecure_authentication_not_available, asp_blocked_due_to_a_debited_user_kyc_limitations,
+            asp_fraud_policy_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Get Cash Ins created.
+      description: >-
+        The array in response will have a maximum length based on the limit
+        parameter (default 5, max 100). The response value count may exceed the limit, therefore subsequent API requests may be necessary.
+      operationId: GetCashIns
+      tags:
+        - Cash In
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Linked Card unique Id linked to accountId
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Cash In with the given Linked Card to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Cash In with the given Linked Card to return
+      responses:
+        '200':
+          description: Array of Account Linked Cards Cash Ins created.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LinkedCardCashIn'
+        '404':
+          description: >-
+            User Account Linked Card with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashIns/{transactionId}':
+    get:
+      summary: Find the specified Cash In transaction.
+      description: Find the specified Account Linked Card Cash In transaction.
+      operationId: GetSpecificCashInTransaction
+      tags:
+        - Cash In
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Card unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+        - name: transactionId
+          in: path
+          description: Fintech Platform Transaction unique Id
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account Linked Cards Cash In specified.
+          schema:
+            $ref: '#/definitions/AccountLinkedCard'
+        '404':
+          description: >-
+            User Account Linked Card Cash In with specified userId, accountId, cardId and transactionId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashInsFee':
+    get:
+      summary: Get Fee from Cash In.
+      description: Returns the Fee from Cash In Linked Card.
+      operationId: GetCashInFee
+      tags:
+        - Cash In
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedCardId
+          in: path
+          description: Fintech Platform Card unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+        - name: amount
+          in: query
+          description: Transfer value
+          required: true
+          type: number
+          format: long
+        - name: currency
+          in: query
+          description: Transfer Currency
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Account Linked Card Cash In Fee applied.
+          schema:
+            $ref: '#/definitions/Money'
+        '404':
+          description: >-
+            User Account Linked Card Cash In with specified userId, accountId and cardId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Bank Account ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks':
+    post:
+      summary: Link a new Bank Account to User Account.
+      description: >-
+        Link a new Bank Account to User Account.
+        You have to set the IBAN.
+        Notice that is mandatory to set the address of residence of User.
+        Events raised: ACCOUNT_LINKED_BANK_ADDED_EVENT (see Webhook)
+      operationId: PostBankAccount
+      tags:
+        - Bank Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Bank account address to linked to Fintech Platform Account.
+          required: true
+          schema:
+            type: object
+            properties:
+              iban:
+                type: string
+              bic:
+                type: string
+      responses:
+        '200':
+          description: Account Linked Bank object.
+          schema:
+            $ref: '#/definitions/AccountLinkedBank'
+        '404':
+          description: >-
+            User Account Linked Bank with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: >-
+            The external Account Service Provider rise an error.
+            (error codes: asp_generic_error, asp_specific_error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Get Linked Banks created.
+      description: >-
+        Returns the Account Linked Banks created.
+      operationId: GetBanks
+      tags:
+        - Bank Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Array of Account Linked Banks created.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AccountLinkedBank'
+        '404':
+          description: >-
+            User Account Linked Bank with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}':
+    get:
+      summary: Specific Account Linked Bank.
+      description: Find the specified Account Linked Bank.
+      operationId: GetSpecificBank
+      tags:
+        - Bank Account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedBankId
+          in: path
+          description: Fintech Platform Bank unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account Linked Bank object.
+          schema:
+            $ref: '#/definitions/AccountLinkedBank'
+        '404':
+          description: >-
+            User Account Linked Bank with specified userId, accountId and bankId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Cash Out ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOuts':
+    post:
+      summary: Transfer money from Account to Bank.
+      description: >-
+        Transfer money from account accountId to bank account bankAccountId.
+        You need to set the amount and currency to transfer.
+        In production environment Cash Out will have a "CREATED" Status until they are treated by the compliance team.
+        In sandbox environment Cash Out will be processed automatically and goes directly to "SUCCEEDED"/"FAILED" status.
+        Register to ACCOUNT_TRANSACTION_LINKED_CARD_CASH_OUT_UPDATE_EVENT  to keep track of status changes.
+
+        Events raised: ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_ADDED_EVENT (see Webhook)
+
+      operationId: PostCashOut
+      tags:
+        - Cash Out
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedBankId
+          in: path
+          description: Fintech Platform Linked Bank unique Id linked to accountId
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Bank account address to linked to Fintech Platform Account.
+          required: true
+          schema:
+            type: object
+            properties:
+              amout:
+                $ref: '#/definitions/Money'
+              bankWireRef:
+                description: Custom reference that will appear on the userâ€™s bank statement
+                type: string
+      responses:
+        '200':
+          description: Linked Bank Cash Out object.
+          schema:
+            $ref: '#/definitions/LinkedBankCashOut'
+        '404':
+          description: >-
+            User Account Linked Bank with specified userId, accountId and bankId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: >-
+            The external Account Service Provider rise an error.
+            (error codes: asp_generic_error, asp_specific_error,
+            asp_insufficient_wallet_balance, asp_transaction_amount_is_higher_than_maximum_permitted_amount,
+            asp_transaction_amount_is_lower_than_lower_permitted_amount, asp_invalid_transaction_amount,
+            asp_blocked_due_to_a_debited_user_kyc_limitations, asp_fraud_policy_error, asp_generic_withdraw_error,
+            asp_bank_wire_refused, asp_associated_bank_not_active)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Get Cash Outs created.
+      description: >-
+        The array in response will have a maximum length based on the limit
+        parameter (default 5, max 100). The response value count may exceed the limit, therefore subsequent API requests may be necessary.
+      operationId: GetCashOuts
+      tags:
+        - Cash Out
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedBankId
+          in: path
+          description: Fintech Platform Linked Bank unique Id linked to accountId
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Cash Out with the given Linked Bank to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Cash Out with the given Linked Bank to return
+      responses:
+        '200':
+          description: Array of Account Linked Banks Cash Outs created.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LinkedBankCashOut'
+        '404':
+          description: >-
+            User Account Linked Bank with specified userId and accountId was not found. (error code: resource_not_found).
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOuts/{transactionId}':
+    get:
+      summary: Find the specified Cash Out transaction.
+      description: Find the specified Account Linked Card Bank Out transaction.
+      operationId: GetSpecificCashOutTransaction
+      tags:
+        - Cash Out
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedBankId
+          in: path
+          description: Fintech Platform Bank unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+        - name: transactionId
+          in: path
+          description: Fintech Platform Transaction unique Id
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Account Linked Cards Bank Out specified.
+          schema:
+            $ref: '#/definitions/LinkedBankCashOut'
+        '404':
+          description: >-
+            User Account Linked Bank Cash In with specified userId, accountId, bankId and transactionId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOutsFee':
+    get:
+      summary: Get Fee from Cash Out.
+      description: Returns the Fee from Cash Out Linked Bank.
+      operationId: GetCashOutFee
+      tags:
+        - Cash Out
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: linkedBankId
+          in: path
+          description: Fintech Platform Bank unique id linked to the Account
+          required: true
+          type: string
+          format: uuid
+        - name: amount
+          in: query
+          description: Amount value
+          required: true
+          type: number
+          format: long
+        - name: currency
+          in: query
+          description: Currency of the amount
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Account Linked Bank Cash Out Fee applied.
+          schema:
+            $ref: '#/definitions/Money'
+        '404':
+          description: >-
+            User Account Linked Bank Cash Out with specified userId, accountId and cardId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Users Account Transactions ##########
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transactions':
+    get:
+      summary: Get transactions.
+      description: >-
+        Returns the transactions (cash in, cash out, transfers) of the User Account selected.
+        The array in response will have a maximum length based on the limit
+        parameter (default 5, max 100). The response value count may exceed the limit, therefore subsequent API requests may be necessary.
+      operationId: GetTransactions
+      tags:
+        - Transactions
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Transactions with the given Linked Bank to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Transactions with the given Linked Bank to return
+      responses:
+        '200':
+          description: Array of Transaction objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+        '404':
+          description: >-
+            User Account with specified userId and accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transactions/{transactionId}':
+    get:
+      summary: Get specified Transaction.
+      description: Returns the specified transaction of the User Account selected.
+      operationId: GetSpecificTransaction
+      tags:
+        - Transactions
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: transactionId
+          in: path
+          description: Fintech Platform Transaction unique id
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Transaction object.
+          schema:
+            $ref: '#/definitions/Transaction'
+        '404':
+          description: >-
+            Transaction with specified userId, accountId and transactionId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+              
+## Transfers ###
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transfers':
+    post:
+      summary: Transfer money from one account to another.
+      description: >-
+        Transfer money from one account accountId to another account
+        
+        Events raised: ACCOUNT_TRANSACTION_TRANSFER_SEND_ADDED_EVENT, ACCOUNT_TRANSACTION_TRANSFER_RECEIVE_ADDED_EVENT (see Webhook)
+
+      operationId: PostTransfer
+      tags:
+        - Transfer
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Transfer Request
+          required: true
+          schema:
+            $ref: '#/definitions/AccountTransferAddRequest'
+      responses:
+        '200':
+          description: Transfer Request object.
+          schema:
+            $ref: '#/definitions/Transfer'
+        '404':
+          description: >-
+            Account with specified ownerId, accountId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        '402':
+          description: >-
+            The external Account Service Provider rise an error.
+            (error codes: asp_generic_error, asp_specific_error,
+            asp_insufficient_wallet_balance, asp_transaction_amount_is_higher_than_maximum_permitted_amount,
+            asp_transaction_amount_is_lower_than_lower_permitted_amount, asp_invalid_transaction_amount,
+            asp_blocked_due_to_a_debited_user_kyc_limitations, asp_fraud_policy_error, asp_generic_withdraw_error,
+            asp_bank_wire_refused, asp_associated_bank_not_active)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Get Transfers created.
+      description: >-
+        The array in response will have a maximum length based on the limit
+        parameter (default 5, max 100). The response value count may exceed the limit, therefore subsequent API requests may be necessary.
+      operationId: GetTransfers
+      tags:
+        - Transfer
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: offset
+          in: query
+          type: integer
+          format: int32
+          description: Number of Cash Out with the given Linked Bank to skip from the beginning
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          description: Number of Cash Out with the given Linked Bank to return
+      responses:
+        '200':
+          description: Array of Transfers created.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transfer'
+        '404':
+          description: >-
+            Account with specified ownerId and accountId was not found. (error code: resource_not_found).
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transfers/{transferId}':
+    get:
+      summary: Find the specified transfer.
+      description: Find the specified Transfer.
+      operationId: GetTransfer
+      tags:
+        - Transfer
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: accountType
+          in: path
+          description: Fintech Platform Account Type
+          required: true
+          type: string
+          enum:
+            - personal
+            - business
+        - name: ownerId
+          in: path
+          description: Fintech Platform Unique Id of the owner the Fintech Account (userId or enterpriseId)
+          required: true
+          type: string
+          format: uuid
+        - name: accountId
+          in: path
+          description: Fintech Platform Account unique id owned by the User
+          required: true
+          type: string
+          format: uuid
+        - name: transferId
+          in: path
+          description: Fintech Platform Transfer unique Id
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Transfer.
+          schema:
+            $ref: '#/definitions/Transfer'
+        '404':
+          description: >-
+            Account with specified ownerId, accountId and transferId was not found. (error code: resource_not_found)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+
+              
+
+########## Web Hooks ##########
+
+  '/rest/v1/fintech/tenants/{tenantId}/hooks':
+    post:
+      summary: Post Web Hook.
+      description: >-
+        A hook notification allow Fintech Platform to send a request to a specific URL on your server to make you aware of an Event.
+        You can set only one web hook for event.
+      operationId: PostWebHook
+      tags:
+        - WebHooks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Hook
+          required: true
+          schema:
+            $ref: '#/definitions/WebHookRequest'
+      responses:
+        '200':
+          description: WebHook object created.
+          schema:
+            $ref: '#/definitions/WebHook'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    get:
+      summary: Get Web Hooks.
+      description: Return all web hooks.
+      operationId: GetWebHooks
+      tags:
+        - WebHooks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Array of WebHook objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/WebHook'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/hooks/{webHookId}':
+    get:
+      summary: Get specific Web Hooks.
+      description: Find specific web hook object.
+      operationId: GetWebHook
+      tags:
+        - WebHooks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: webHookId
+          in: path
+          description: Fintech Platform WebHook Unique Id of the User
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Specified WebHook objects.
+          schema:
+            $ref: '#/definitions/WebHook'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+    put:
+      summary: Update selected Web Hooks.
+      description: Update the URL or status of selected Web Hooks.
+      operationId: PutWebHook
+      tags:
+        - WebHooks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: webHookId
+          in: path
+          description: Fintech Platform WebHook Unique Id of the User
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          required: true
+          description: Update URL or change status or both of the web hook given
+          schema:
+            type: object
+            properties:
+              url:
+                description: Callback URL where your receive notification for each Event type
+                type: string
+                format: url
+              status:
+                description: Hook state
+                type: string
+                enum:
+                  - ASK_TO_DISABLE
+                  - ASK_TO_ENABLE
+                  - DISABLED
+                  - ENABLED
+      responses:
+        '200':
+          description: Specified WebHook objects.
+          schema:
+            $ref: '#/definitions/WebHook'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## SMS Telephone Service ##########
+  '/rest/v1/fintech/tenants/{tenantId}/telephoneSMS':
+    post:
+      summary: Send SMS.
+      description: >-
+        Send a Telephone Text message
+      operationId: PostSMS
+      tags:
+        - SMS Telephone Service
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: Idempotency-Key
+          description: >-
+            Idempotency value. Used to safely retrying requests without accidentally performing the same operation twice.
+          in: header
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Amount money to transfer from Account
+          required: true
+          schema:
+            type: object
+            required:
+              - telephoneNumber
+              - message
+            properties:
+              telephoneNumber:
+                type: string
+              message:
+                type: string
+      responses:
+        '200':
+          description: Telephone SMS object created.
+          schema:
+            $ref: '#/definitions/TelephoneSMS'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Notification ##########
+  '/rest/v1/fintech/tenants/{tenantId}/notification':
+    post:
+      summary: Send Notification.
+      description: >-
+        Send cloud messaging.
+      operationId: PostNotification
+      tags:
+        - Notification
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Notification Request
+          required: true
+          schema:
+            $ref: '#/definitions/NotificationRequest'
+      responses:
+        '200':
+          description: Notification.
+          schema:
+            $ref: '#/definitions/Notification'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+########## Bucket ##########
+  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/bucketObjects':
+    post:
+      summary: Add a bucket object for the user.
+      description: >-
+        Buckets allow the user to store files in binary format. For every request to create a bucket object you get 
+        the uploadPath parameter. This is the path that must be use to POST the file in binary format.
+        You have to use this service for example to post documents for the kyc process.
+      operationId: PostUserBucketObject
+      tags:
+        - Bucket
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: userId
+          in: path
+          description: Fintech Platform User unique id of the User to retrieve
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Bucket Object Request
+          required: true
+          schema:
+            $ref: '#/definitions/BucketObjectRequest'
+      responses:
+        '200':
+          description: Bucket Object.
+          schema:
+            $ref: '#/definitions/BucketObject'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/bucketObjects':
+    post:
+      summary: Add a bucket object for the enterprise.
+      description: >-
+        Buckets allow the enterprise to store files in binary format. For every request to create a bucket object you get 
+        the uploadPath parameter. This is the path that must be use to POST the file in binary format.
+        You have to use this service for example to post documents for the kyc process.
+      operationId: PostEnterpriseBucketObject
+      tags:
+        - Bucket
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      security:
+        - OauthSecurityApplication:
+          - client
+      parameters:
+        - name: tenantId
+          in: path
+          description: Fintech Platform Tenant unique Id
+          required: true
+          type: string
+          format: uuid
+        - name: enterpriseId
+          in: path
+          description: Fintech Platform Enterprise unique id of the Enterprise to retrieve
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          description: Bucket Object Request
+          required: true
+          schema:
+            $ref: '#/definitions/BucketObjectRequest'
+      responses:
+        '200':
+          description: Bucket Object.
+          schema:
+            $ref: '#/definitions/BucketObject'
+        default:
+          description: Cross error (Forbidden, BadRequest or Internal Server Error)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+
+definitions:
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+
+  UserRequest:
+    type: object
+    properties:
+      telephone:
+        description: User telephone number
+        type: string
+      email:
+        description: User email
+        type: string
+      name:
+        description: User first name
+        type: string
+      surname:
+        description: User last name
+        type: string
+      birthday:
+        description: User birthday in ISO 8601 date format. Example 2012-07-22
+        type: string
+      nationality:
+        description: User nationality, ISO 3166-1 alpha-2 format expected.
+        type: string
+      countryOfResidence:
+        description: User country of residence, ISO 3166-1 alpha-2 format expected.
+        type: string
+      cityOfResidence:
+        description: User city of residence
+        type: string
+      addressOfResidence:
+        description: User address of residence
+        type: string
+      postalCode:
+        description: User postal code of residence
+        type: string
+      occupation:
+        description: User occupation, i.e. work
+        type: string
+      incomeRange:
+        description: >-
+          Could be only one of these values: 1 - for incomes less than 18Kâ‚¬, 2 - for incomes between 18 and 30Kâ‚¬, 3 - for incomes between 30 and 50Kâ‚¬, 4 - for incomes between 50 and 80Kâ‚¬, 5 - for incomes between 80 and 120Kâ‚¬, 6 - for incomes greater than 120Kâ‚¬
+        type: integer
+      picture:
+        description: bucket object id of the user picture.
+        type: string
+        format: uuid
+
+  User:
+    type: object
+    required:
+      - userId
+      - tenantId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      userId:
+        description: Fintech Platform unique identification.
+        type: string
+        format: uuid
+      telephone:
+        description: User telephone number detokenized from fintech platform. Readonly parameter, use telephoneToken to update.
+        type: string
+      email:
+        description: User email
+        type: string
+      name:
+        description: User first name
+        type: string
+      surname:
+        description: User last name
+        type: string
+      birthday:
+        description: User birthday in ISO 8601 date format. Example 2012-07-22
+        type: string
+      nationality:
+        description: User nationality, ISO 3166-1 alpha-2 format expected.
+        type: string
+      countryOfResidence:
+        description: User country of residence, ISO 3166-1 alpha-2 format expected.
+        type: string
+      cityOfResidence:
+        description: User city of residence
+        type: string
+      addressOfResidence:
+        description: User address of residence
+        type: string
+      postalCode:
+        description: User postal code of residence
+        type: string
+      occupation:
+        description: User occupation, i.e. work
+        type: string
+      incomeRange:
+        description: >-
+          Could be only one of these values: 1 - for incomes less than 18Kâ‚¬, 2 - for incomes between 18 and 30Kâ‚¬, 3 - for incomes between 30 and 50Kâ‚¬, 4 - for incomes between 50 and 80Kâ‚¬, 5 - for incomes between 80 and 120Kâ‚¬, 6 - for incomes greater than 120Kâ‚¬
+        type: integer
+      picture:
+        description: bucket object id of the user picture.
+        type: string
+        format: uuid
+      created:
+        description: Timestamp of user account creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of user account last update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  UserDocumentRequest:
+    type: object
+    required:
+      - docType
+      - bucketObjectIdPages
+    properties:
+      docType:
+        description: Document type
+        type: string
+        enum:
+          - IDENTITY_CARD
+          - PASSPORT
+          - DRIVING_LICENCE
+      bucketObjectIdPages:
+        description: The Bucket ObjectIds of the images of each page of the document.
+        type: array
+        items:
+          description: Bucket ObjectId (see POST bucketObjects service)
+          type: string
+          format: uuid
+        
+  UserDocument:
+    type: object
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      userId:
+        description: Fintech platform unique identification.
+        type: string
+        format: uuid
+      documentId:
+        description: Fintech platform unique identification.
+        type: string
+        format: uuid
+      docType:
+        description: Document type
+        type: string
+        enum:
+          - IDENTITY_CARD
+          - PASSPORT
+          - DRIVING_LICENCE
+      bucketObjectIdPages:
+        description: The Bucket ObjectIds of the images of each page of the document.
+        type: array
+        items:
+          description: Bucket ObjectId (see POST bucketObjects service)
+          type: string
+          format: uuid
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+
+        
+  Enterprise:
+    type: object
+    properties:
+      tenantId:
+        type: string
+        format: uuid
+      enterpriseId:
+        type: string
+        format: uuid
+      legalRepresentativeId:
+        type: string
+        format: uuid
+      telephone:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      enterpriseType:
+        type: string
+      countryHeadquarters:
+        type: string
+      cityOfHeadquarters:
+        type: string
+      addressOfHeadquarters:
+        type: string
+      postalCodeHeadquarters:
+        type: string
+      businessLogo:
+        description: Bucket object id of the business logo image
+        type: string
+        format: uuid
+      created:
+        type: string
+      updated:
+        type: string
+
+
+  EnterpriseRequest:
+    type: object
+    properties:
+      legalRepresentativeId:
+        description: UserId that rapresent enterprise
+        type: string
+        format: uuid
+      telephone:
+        description: Enterprise telephone number
+        type: string
+        format: uuid
+      email:
+        description: Enterprise email
+        type: string
+      name:
+        description: Enterprise name
+        type: string
+      enterpriseType:
+        description: Enterprise type
+        type: string
+        enum:
+        - BUSINESS
+        - ORGANIZATION
+        - SOLETRADER
+      countryHeadquarters:
+        description: Headquarter country
+        type: string
+      cityOfHeadquarters:
+        description: Headquarter city
+        type: string
+      addressOfHeadquarters:
+        description: Headquarter address
+        type: string
+      postalCodeHeadquarters:
+        description: Headquarter postalcode
+        type: string
+      businessLogo:
+        description: Bucket object id of the business logo image
+        type: string
+        format: uuid
+
+  EnterpriseDocument:
+    type: object
+    properties:
+      id:
+        description: Unique identification.
+        type: string
+      docType:
+        description: Document type
+        type: string
+        enum:
+        - IDENTITY_PROOF
+        - ARTICLES_OF_ASSOCIATION
+        - REGISTRATION_PROOF
+        - SHAREHOLDER_DECLARATION
+      bucketObjectIdPages:
+        description: The Bucket ObjectIds of the images of each page of the document.
+        type: array
+        items:
+          description: Bucket ObjectId (see POST bucketObjects service)
+          type: string
+          format: uuid
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  EnterpriseDocumentRequest:
+    type: object
+    required:
+    - docType
+    - pages
+    properties:
+      docType:
+        description: Document type
+        type: string
+        enum:
+        - IDENTITY_PROOF
+        - ARTICLES_OF_ASSOCIATION
+        - REGISTRATION_PROOF
+        - SHAREHOLDER_DECLARATION
+      bucketObjectIdPages:
+        description: The Bucket ObjectIds of the images of each page of the document.
+        type: array
+        items:
+          description: Bucket ObjectId (see POST bucketObjects service)
+          type: string
+          format: uuid
+
+  PersonalAccountAddRequest:
+    type: object
+    required:
+      - aspName
+    properties:
+      aspName:
+        description: Account Service Provider name
+        type: string
+      primaryAccountId:
+        description: >-
+          Fintech Platform Account unique identification of reference primary Account.
+          Set only for secondary Accounts
+        type: string
+        format: uuid
+      aspRequest:
+        description: Fintech Platform Account unique identification.
+        type: string
+      tags:
+        description: Custom data that can be added to this account object
+        type: string
+
+  PersonalAccount:
+    type: object
+    required:
+      - ownerId
+      - tenantId
+      - accountId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      scope:
+        description: Account operation allowed
+        type: array
+        items:
+          type: string
+          enum:
+            - LINKED_CARDS
+            - LINKED_BANKS
+            - LINKED_CARD_CASH_IN
+            - LINKED_BANK_CASH_OUT
+            - SCT_PAYMENTS
+            - IBAN_ACCOUNT
+            - CARD_ACCOUNT
+            - TRANSFER
+            - BANK_WIRE_CASH_IN
+      aspName:
+        description: Account Service Provider name
+        type: string
+      status:
+        description: Current Account status
+        type: string
+        enum:
+          - REQUEST_ENABLE
+          - ENABLED
+          - REQUEST_DISABLE
+          - DISABLED
+      levelStatus:
+        description: Level Account status
+        type: string
+        enum:
+          - LEVEL1_WAITING_CREATION
+          - LEVEL1_CREATED
+          - REQUEST_UPGRADE_TO_LEVEL2
+          - LEVEL2_WAITING_UPGRADE
+          - LEVEL2_UPGRADED
+          - LEVEL2_REFUSED_UPGRADE
+          - REQUEST_UPGRADE_TO_LEVEL3
+          - LEVEL3_WAITING_UPGRADE
+          - LEVEL3_UPGRADED
+          - LEVEL3_REFUSED_UPGRADE
+      level:
+        description: Level Account status
+        type: string
+        enum:
+          - LEVEL1
+          - LEVEL2
+          - LEVEL3
+      primaryAccountId:
+        description: >-
+          Fintech Platform Account unique identification of reference primary Account.
+          Set only for secondary Accounts
+        type: string
+        format: uuid
+      error:
+        $ref: '#/definitions/Error'
+      tags:
+        description: Custom data that can be added to this account object
+        type: string
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of user account last update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  PersonalAccountUpdateRequest:
+    type: object
+    properties:
+      status:
+        description: Current Account status
+        type: string
+        enum:
+          - REQUEST_ENABLE
+          - REQUEST_DISABLE
+      levelStatus:
+        description: Level Account status
+        type: string
+        enum:
+          - REQUEST_UPGRADE_TO_LEVEL2
+          - REQUEST_UPGRADE_TO_LEVEL3
+
+  BusinessAccountAddRequest:
+    type: object
+    required:
+      - aspName
+    properties:
+      aspName:
+        description: Account Service Provider name
+        type: string
+      primaryAccountId:
+        description: >-
+          Fintech Platform Account unique identification of reference primary Account.
+          Set only for secondary Accounts
+        type: string
+        format: uuid
+      aspRequest:
+        description: Fintech Platform Account unique identification.
+        type: string
+      tags:
+        description: Custom data that can be added to this account object
+        type: string
+
+  BusinessAccount:
+    type: object
+    required:
+      - ownerId
+      - tenantId
+      - accountId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      scope:
+        description: Account operation allowed
+        type: array
+        items:
+          type: string
+          enum:
+            - LINKED_CARDS
+            - LINKED_BANKS
+            - LINKED_CARD_CASH_IN
+            - LINKED_BANK_CASH_OUT
+            - SCT_PAYMENTS
+            - IBAN_ACCOUNT
+            - CARD_ACCOUNT
+            - TRANSFER
+            - BANK_WIRE_CASH_IN
+      aspName:
+        description: Account Service Provider name
+        type: string
+      status:
+        description: Current Account status
+        type: string
+        enum:
+          - REQUEST_ENABLE
+          - ENABLED
+          - REQUEST_DISABLE
+          - DISABLED
+      levelStatus:
+        description: Level Account status
+        type: string
+        enum:
+          - LEVEL1_WAITING_CREATION
+          - LEVEL1_CREATED
+          - REQUEST_UPGRADE_TO_LEVEL2
+          - LEVEL2_WAITING_UPGRADE
+          - LEVEL2_UPGRADED
+          - LEVEL2_REFUSED_UPGRADE
+          - REQUEST_UPGRADE_TO_LEVEL3
+          - LEVEL3_WAITING_UPGRADE
+          - LEVEL3_UPGRADED
+          - LEVEL3_REFUSED_UPGRADE
+      level:
+        description: Level Account status
+        type: string
+        enum:
+          - LEVEL1
+          - LEVEL2
+          - LEVEL3
+      primaryAccountId:
+        description: >-
+          Fintech Platform Account unique identification of reference primary Account.
+          Set only for secondary Accounts
+        type: string
+        format: uuid
+      error:
+        $ref: '#/definitions/Error'
+      tags:
+        description: Custom data that can be added to this account object
+        type: string
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of user account last update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  BusinessAccountUpdateRequest:
+    type: object
+    properties:
+      status:
+        description: Current Account status
+        type: string
+        enum:
+          - REQUEST_ENABLE
+          - REQUEST_DISABLE
+      levelStatus:
+        description: Level Account status
+        type: string
+        enum:
+          - REQUEST_UPGRADE_TO_LEVEL2
+          - REQUEST_UPGRADE_TO_LEVEL3
+
+
+  AccountBalance:
+    type: object
+    required:
+      - ownerId
+      - tenantId
+      - accountId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      balance:
+        $ref: '#/definitions/Money'
+      availableBalance:
+        $ref: '#/definitions/Money'
+
+  Money:
+    type: object
+    required:
+      - currency
+      - amount
+    properties:
+      currency:
+        description: The currency - should be ISO_4217 format
+        type: string
+      amount:
+        description: >-
+          An amount of money in the smallest sub-division of the currency, e.g.
+          9.43 EUR would be represented as 943 whereas 9 JPY would be
+          represented as just 9)
+        type: integer
+        format: int64
+
+  AccountKYCRequest:
+    type: object
+    required:
+      - documentId
+    properties:
+      documentId:
+        description: Fintech Platform Document unique id of the User Document
+        type: string
+        format: uuid
+
+  AccountKYC:
+    type: object
+    required:
+      - tenantId
+      - ownerId
+      - accountId
+      - accountType
+      - kycId
+      - documentId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      accountType:
+        description: Account type
+        type: string
+      kycId:
+        description: Fintech Platform KYC unique id of the
+        type: string
+        format: uuid
+      documentId:
+        description: Fintech Platform Document unique id of the User Document
+        type: string
+        format: uuid
+      status:
+        description: Current validation status of the KYC documents
+        type: string
+        enum:
+          - CREATED
+          - VALIDATION_ASKED
+          - VALIDATED
+          - INVALID
+      error:
+        $ref: '#/definitions/Error'
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of user account last update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  AccountKYCDocumentsRequired:
+    type: object
+    required:
+      - tenantId
+      - ownerId
+      - accountId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      accountType:
+        description: Account type
+        type: string
+      docType:
+        description: Documents type required for KYC process
+         as disjunction of conjunctions, e.g. [[a,b],[c]] means (a and b) or c
+        type: array
+        items:
+          type: array
+          items:
+            type: string
+            enum:
+              - IDENTITY_CARD
+              - PASSPORT
+              - DRIVING_LICENCE
+
+  AccountLinkedCardRequest:
+    type: object
+    required:
+      - alias
+      - expiration
+      - currency
+    properties:
+      alias:
+        description: Partially obfuscated card number
+        type: string
+      expiration:
+        description: Card expiry date - must be in MMYY format
+        type: string
+      currency:
+        description: The currency - should be ISO_4217 format
+        type: string
+
+  AccountLinkedCard:
+    type: object
+    required:
+      - tenantId
+      - ownerId
+      - accountId
+      - cardId
+      - status
+      - tspName
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      cardId:
+        description: Fintech Platform Card unique identification.
+        type: string
+        format: uuid
+      alias:
+        description: Partially obfuscated card number
+        type: string
+      expiration:
+        description: Card expiry date - must be in MMYY format
+        type: string
+      currency:
+        description: The currency - should be ISO_4217 format
+        type: string
+      issuer:
+        description: issuer
+        type: string
+        enum:
+          - VISA
+          - MASTERCARD
+          - DINERS
+          - MAESTRO
+          - UNKNOWN
+      status:
+        description: status
+        type: string
+        enum:
+          - NOT_ACTIVE
+          - CREATED
+          - VALIDATED
+          - CREATION_ERROR
+          - INVALID
+      tspName:
+        description: Tokenizer service provider name
+        type: string
+      tspPayload:
+        description: Token Service Payload
+        type: string
+      defaultCard:
+        description: Setted to true if Card is the default
+        type: boolean
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of user account last update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  CardTest:
+    type: object
+    required:
+      - alias
+      - expiration
+      - currency
+    properties:
+      alias:
+        description: Partially obfuscated card number
+        type: string
+      expiration:
+        description: Card expiry date - must be in MMYY format
+        type: string
+      currency:
+        description: The currency - should be ISO_4217 format
+        type: string
+
+  LinkedCardCashIn:
+    type: object
+    required:
+      - tenantId
+      - ownerId
+      - accountId
+      - cardId
+      - TransactionId
+      - amount
+      - fee
+      - secure3D
+      - status
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      cardId:
+        description: Fintech Platform Card unique id linked to the Account
+        type: string
+        format: uuid
+      transactionId:
+        description: Fintech Platform Transaction unique id
+        type: string
+        format: uuid
+      amount:
+        $ref: '#/definitions/Money'
+      fee:
+        $ref: '#/definitions/Money'
+      secure3D:
+        description: Setted to true if 3D secure procedure is required
+        type: boolean
+      redirectURL:
+        description: redirect the User to the web page set in this parameter. If secure3Drequired is false, this parameter is null
+        type: string
+      status:
+        description: >
+          PayIn state. The status goes directly from REQUEST to SUCCEEDED or FAILED in case of no 3Dsecure required.
+          Otherwise the status goes from REQUEST to CREATED and only after the 3D procedure is completed goes to SUCCEEDED or FAILED.
+        type: string
+        enum:
+          - REQUEST
+          - CREATED
+          - SUCCEEDED
+          - FAILED
+      error:
+        $ref: '#/definitions/Error'
+      created:
+        description: Timestamp of document creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of user account last update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  AccountLinkedBank:
+    type: object
+    required:
+      - ownerId
+      - tenantId
+      - accountId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      bankId:
+        description: Fintech Platform Bank unique id linked to the Account
+        type: string
+        format: uuid
+      iban:
+        description: International Bank Account Number
+        type: string
+      bic:
+        description: Business Identifier Codes
+        type: string
+      status:
+        description: Describes how the Bank Account validation process is.
+        type: string
+        enum:
+          - NOT_ACTIVE
+          - CREATED
+          - VALIDATED
+          - CREATION_ERROR
+          - INVALID
+      created:
+        description: Timestamp of bank account object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of bank account object update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  LinkedBankCashOut:
+    type: object
+    required:
+      - ownerId
+      - tenantId
+      - accountId
+      - bankId
+      - transactionId
+      - amount
+      - fee
+      - status
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      bankId:
+        description: Fintech Platform Bank unique id linked to the Account
+        type: string
+        format: uuid
+      transactionId:
+        description: Fintech Platform Transaction unique id
+        type: string
+        format: uuid
+      amount:
+        $ref: '#/definitions/Money'
+      fee:
+        $ref: '#/definitions/Money'
+      bankWireRef:
+        description: Custom reference that will appear on the userâ€™s bank statement
+        type: string
+      status:
+        description: >
+          CashOut state. In production environment CashOuts will have a "CREATED" Status until they are treated by the compliance team.
+          In sandbox environment the status remain in "CREATED" indefinitely.
+        type: string
+        enum:
+          - REQUEST
+          - CREATED
+          - SUCCEEDED
+          - FAILED
+      created:
+        description: Timestamp of bank account object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of bank account object update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  AccountRef:
+    type: object
+    required:
+      - tenantId
+      - ownerId
+      - accountId
+      - accountType
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      accountType:
+        description: Account type
+        type: string
+
+  Transaction:
+    type: object
+    required:
+      - transactionId
+      - transactionType
+      - amount
+      - fee
+    properties:
+      transactionId:
+        description: Fintech Platform Transaction unique identification.
+        type: string
+        format: uuid
+      credited:
+        $ref: '#/definitions/AccountRef'
+      debited:
+        $ref: '#/definitions/AccountRef'
+      transactionType:
+        description: Fintech Platform Transaction unique id
+        type: string
+        enum:
+          - LINKED_CARD_CASH_IN
+          - LINKED_BANK_CASH_OUT
+          - TRANSFER_SEND
+          - TRANSFER_RECEIVE
+          - SCT_PAYMENT
+          - BANK_WIRE_CASH_IN
+          - EXTERNAL_BANK_TRANSACTION
+      amount:
+        $ref: '#/definitions/Money'
+      fee:
+        $ref: '#/definitions/Money'
+      message:
+        description: Personalized User message attached to the transaction
+        type: string
+      error:
+        $ref: '#/definitions/Error'
+      status:
+        description: Transaction status. The status after the request goes directly from REQUEST to SUCCEEDED or FAILED.
+        type: string
+        enum:
+          - REQUEST
+          - CREATED
+          - SUCCEEDED
+          - FAILED
+      created:
+        description: Timestamp of transaction object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of transaction object update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+
+  AccountTransferAddRequest:
+    type: object
+    properties:
+      creditedAccount:
+        $ref: '#/definitions/AccountRef'
+      amount:
+        $ref: '#/definitions/Money'
+      message:
+        description: Personalized User message attached to the transaction
+        type: string
+      tags:
+        description: Customer tags
+        type: string
+
+  Transfer:
+    type: object
+    required:
+      - transactionId
+      - transactionType
+      - amount
+      - fee
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      ownerId:
+        description: Fintech Platform User unique identification.
+        type: string
+        format: uuid
+      accountId:
+        description: Fintech Platform Account unique identification.
+        type: string
+        format: uuid
+      transactionId:
+        description: Fintech Platform Transaction unique identification.
+        type: string
+        format: uuid
+      creditedAccount:
+        $ref: '#/definitions/AccountRef'
+      amount:
+        $ref: '#/definitions/Money'
+      fee:
+        $ref: '#/definitions/Money'
+      message:
+        description: Personalized User message attached to the transaction
+        type: string
+      error:
+        $ref: '#/definitions/Error'
+      status:
+        description: Transfer status. The status after the request goes directly from REQUEST to SUCCEEDED or FAILED.
+        type: string
+        enum:
+          - REQUEST
+          - CREATED
+          - SUCCEEDED
+          - FAILED
+      created:
+        description: Timestamp of transaction object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of transaction object update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  WebHookRequest:
+    type: object
+    required:
+      - eventType
+      - url
+    properties:
+      eventType:
+        description: Type of the event subscribed
+        type: string
+        enum:
+            # event user
+          - USER_CREATED_EVENT,
+          - USER_UPDATED_EVENT,
+
+              # event document
+          - USER_DOCUMENT_CREATED_EVENT,
+
+              # event personal account
+          - ACCOUNT_PERSONAL_ADDED_EVENT,
+          - ACCOUNT_PERSONAL_UPDATE_EVENT,
+
+              # event linked bank
+          - ACCOUNT_LINKED_BANK_ADDED_EVENT,
+          - ACCOUNT_LINKED_BANK_UPDATED_EVENT,
+
+              # event linked card
+          - ACCOUNT_LINKED_CARD_ADDED_EVENT,
+          - ACCOUNT_LINKED_CARD_UPDATED_EVENT,
+          - ACCOUNT_LINKED_CARD_DEFAULT_UPDATED_EVENT,
+
+              # event transaction
+          - ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_ADDED_EVENT,
+          - ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_UPDATE_EVENT,
+
+          - ACCOUNT_TRANSACTION_LINKED_BANK_CASH_OUT_ADDED_EVENT,
+          - ACCOUNT_TRANSACTION_LINKED_CARD_CASH_OUT_UPDATE_EVENT,
+      url:
+        description: Callback URL where your receive notification for each Event type
+        type: string
+
+  WebHook:
+    type: object
+    required:
+      - hookId
+      - tenantId
+      - eventType
+      - url
+      - status
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification.
+        type: string
+        format: uuid
+      hookId:
+        description: Fintech Platform Hook unique identification.
+        type: string
+        format: uuid
+      eventType:
+        description: Type of the event subscribed
+        type: string
+        enum:
+            # event user
+          - USER_CREATED_EVENT,
+          - USER_UPDATED_EVENT,
+
+          - ENTERPRISE_CREATED_EVENT,
+          - ENTERPRISE_UPDATED_EVENT,
+
+              # event document
+          - USER_DOCUMENT_CREATED_EVENT,
+
+              # event personal account
+          - ACCOUNT_PERSONAL_ADDED_EVENT,
+          - ACCOUNT_PERSONAL_UPDATE_EVENT,
+
+              # event business account
+          - ACCOUNT_BUSINESS_ADDED_EVENT,
+          - ACCOUNT_BUSINESS_UPDATE_EVENT,
+
+              # event linked bank
+          - ACCOUNT_LINKED_BANK_ADDED_EVENT,
+          - ACCOUNT_LINKED_BANK_UPDATED_EVENT,
+
+              # event linked card
+          - ACCOUNT_LINKED_CARD_ADDED_EVENT,
+          - ACCOUNT_LINKED_CARD_UPDATED_EVENT,
+          - ACCOUNT_LINKED_CARD_DEFAULT_UPDATED_EVENT,
+
+              # event transaction
+          - ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_ADDED_EVENT,
+          - ACCOUNT_TRANSACTION_LINKED_CARD_CASH_IN_UPDATE_EVENT,
+
+          - ACCOUNT_TRANSACTION_LINKED_BANK_CASH_OUT_ADDED_EVENT,
+          - ACCOUNT_TRANSACTION_LINKED_CARD_CASH_OUT_UPDATE_EVENT,
+
+
+          - ACCOUNT_TRANSACTION_TRANSFER_SEND_ADDED_EVENT,
+          - ACCOUNT_TRANSACTION_TRANSFER_SEND_UPDATE_EVENT,
+
+          - ACCOUNT_TRANSACTION_TRANSFER_RECEIVE_ADDED_EVENT,
+          - ACCOUNT_TRANSACTION_TRANSFER_RECEIVE_UPDATE_EVENT
+      url:
+        description: Callback URL where your receive notification for each Event type
+        type: string
+        format: url
+      status:
+        description: Hook state
+        type: string
+        enum:
+          - ASK_TO_DISABLE
+          - ASK_TO_ENABLE
+          - DISABLED
+          - ENABLED
+      created:
+        description: Timestamp of bank account object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of bank account object update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  TelephoneSMS:
+    type: object
+    required:
+      - telephoneNumber
+      - message
+    properties:
+      telephoneNumber:
+        type: string
+      message:
+        type: string
+      created:
+        description: Timestamp of bank account object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+  NotificationMessage:
+    description: Basic notification object to use across all platforms.
+    type: object
+    required:
+      - title
+      - body
+    properties:
+      title:
+        description: Notification title
+        type: string
+      body:
+        description: Notification body text
+        type: string
+
+  NotificationRequest:
+    type: object
+    required:
+      - token
+    properties:
+      token:
+        description: Firebase registration token to send a message to.
+        type: string
+      notification:
+        $ref: '#/definitions/NotificationMessage'
+      data:
+        description: Arbitrary json payload
+        type: object
+
+  Notification:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        description: The firebase identifier of the message sent
+
+
+  BucketObjectRequest:
+    type: object
+    properties:
+      filename:
+        description: Name of the file. Notice that this parameter is optional. To retrive the file you have to store it's objectid.
+        type: string
+
+  BucketObject:
+    type: object
+    required:
+      - tenantId
+      - bucketName
+      - objectId
+    properties:
+      tenantId:
+        description: Fintech Platform Tenant unique identification
+        type: string
+        format: uuid
+      bucketName:
+        description: Name of the bucket where the file is stored
+        type: string
+        format: uuid
+      objectId:
+        description: Object Identifier. The tuple TenatId, BucketName and ObjectId identifies univocally the file object
+        type: string
+      status:
+        description: Hook state
+        type: string
+        enum:
+          - CREATED
+          - VALID
+          - INVALID
+      filename:
+        description: Name of the file
+        type: string
+      uploadPath:
+        description: the relative path where POST the actual file in binary format. Concat the hostname with the upload path to get the URI
+        type: string
+      created:
+        description: Timestamp of bucket object creation as defined by date-time - RFC3339
+        type: string
+        format: date-time
+      updated:
+        description: Timestamp of bucket object update as defined by date-time - RFC3339
+        type: string
+        format: date-time
+
+        
+        

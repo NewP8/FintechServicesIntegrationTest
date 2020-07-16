@@ -17,8 +17,8 @@ set KYC_ID=e8acd069-8c49-4bc9-baf5-a47b1316542e
 " run.bat tests/token.js no era su fintech
 " run.bat tests/user-account.js
 " run.bat tests/user-account-kyc.js
-
 " run.bat tests/enterprise-account-kyc.js
+
 " run.bat tests/user-account-kyc-asp-references
 " run.bat tests/user-account-upgrade_to_level_3
 " run.bat tests/kyc-for-existing-user

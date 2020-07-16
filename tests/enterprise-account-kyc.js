@@ -5,7 +5,9 @@ chai.should();
 const api = require('./api/api');
 const fs = require('fs');
 
-const state = {};
+const state = {
+    token: "token"
+};
 
 describe("Enterprise: from enterprise creation to open an account and request KYC", function() {
 	this.timeout(60000);
@@ -29,18 +31,18 @@ describe("Enterprise: from enterprise creation to open an account and request KY
    * Token 
    */
 
-  it('should create token', function() {
-    return api.core.createServerToken(
-    	api.core.CLIENT_TENANT_ID, 
-    	api.core.CLIENT_SECRET, 
-    	'client_credentials',
-    	['identity', 'account'])
-    .then(function(token) { 
-      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
-      console.log(`token: ${token}`)
-    	state.token = token
-    });
-  });
+//  it('should create token', function() {
+//    return api.core.createServerToken(
+//    	api.core.CLIENT_TENANT_ID,
+//    	api.core.CLIENT_SECRET,
+//    	'client_credentials',
+//    	['identity', 'account'])
+//    .then(function(token) {
+//      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
+//      console.log(`token: ${token}`)
+//    	state.token = token
+//    });
+//  });
 
   /* 
    * User

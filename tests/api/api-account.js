@@ -29,7 +29,7 @@ function createUserFintech(fintechToken, idempotencyKey, tenantId, userRequest) 
 
 function updateUserFromId(fintechToken, tenantId, userId, request) {
   return baseUrl
-    .put(`/rest/v1/fintech/tenants/${tenantId}/users/${userId}`)
+    .put(`/rest/v1/identity/tenants/${tenantId}/users/${userId}`)
     .send(request)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
@@ -44,7 +44,7 @@ function updateUserFromId(fintechToken, tenantId, userId, request) {
 
 function getUserPictureFromId(fintechToken, tenantId, userId) {
   return baseUrl
-    .get(`/rest/v1/fintech/tenants/${tenantId}/users/${userId}/picture`)
+    .get(`/rest/v1/identity/tenants/${tenantId}/users/${userId}/picture`)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
     .expect(200)
@@ -92,7 +92,7 @@ function updatePersonalAccountFintech(fintechToken, tenantId, ownerId, accountId
 // Documents
 function createUserDocument(fintechToken, idempotencyKey, tenantId, ownerId, request) {
   return baseUrl
-    .post(`/rest/v1/fintech/tenants/${tenantId}/users/${ownerId}/documents`)
+    .post(`/rest/v1/identity/tenants/${tenantId}/users/${ownerId}/documents`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -109,7 +109,7 @@ function createUserDocument(fintechToken, idempotencyKey, tenantId, ownerId, req
 // KYC
 function getKycRequiredDocuments(fintechToken, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycRequiredDocuments`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycRequiredDocuments`)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .set('Authorization', `Bearer ${fintechToken}`)
@@ -125,7 +125,7 @@ function getKycRequiredDocuments(fintechToken, tenantId, accountType, ownerId, a
 
 function addAccountKYC(fintechToken, idempotencyKey, tenantId, accountType, ownerId, accountId, KycRequest) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs`)
+        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs`)
         .send(KycRequest)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')

@@ -5,7 +5,9 @@ chai.should();
 const api = require('./api/api');
 const fs = require('fs');
 
-const state = {};
+const state = {
+    token: "token"
+};
 
 describe("User: from user creation to open an account and request KYC", function() {
 	this.timeout(60000);
@@ -29,18 +31,18 @@ describe("User: from user creation to open an account and request KYC", function
    * Token 
    */
 
-  it('should create token', function() {
-    return api.core.createServerToken(
-    	api.core.CLIENT_TENANT_ID, 
-    	api.core.CLIENT_SECRET, 
-    	'client_credentials',
-    	['identity', 'account'])
-    .then(function(token) { 
-      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
-      console.log(`token: ${token}`)
-    	state.token = token
-    });
-  });
+//  it('should create token', function() {
+//    return api.core.createServerToken(
+//    	api.core.CLIENT_TENANT_ID,
+//    	api.core.CLIENT_SECRET,
+//    	'client_credentials',
+//    	['identity', 'account'])
+//    .then(function(token) {
+//      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
+//      console.log(`token: ${token}`)
+//    	state.token = token
+//    });
+//  });
 
   /* 
    * User
@@ -182,6 +184,8 @@ describe("User: from user creation to open an account and request KYC", function
 
   state.frontPic = fs.readFileSync('img/front.jpg')
 
+  //console.log(state.userBucketFrontObject.uploadPath);
+
   it('should post user bucket front image file', function() {
     return api.bucket.addBucketObjectFile(state.userBucketFrontObject.uploadPath, state.frontPic)
     .then(function(bucket) {
@@ -239,6 +243,7 @@ describe("User: from user creation to open an account and request KYC", function
       state.userObject.userId,
       documentReq)
     .then (function(document) {
+      console.log(document)
       expect(document).to.include({tenantId: api.core.CLIENT_TENANT_ID})
       expect(document).to.have.property('created')
       expect(document.created).to.have.lengthOf.at.least(20)

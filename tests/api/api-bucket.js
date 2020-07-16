@@ -12,7 +12,7 @@ const baseUrl = request(baseUrlPath);
 // Add user Bucket Object
 function addUserBucketObject(fintechToken, idempotencyKey, tenantId, userId, request) {
   return baseUrl
-    .post(`/rest/v1/fintech/tenants/${tenantId}/users/${userId}/bucketObjects`)
+    .post(`/rest/v1/bucket/tenants/${tenantId}/bucketsName/${userId}/objects`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -29,7 +29,7 @@ function addUserBucketObject(fintechToken, idempotencyKey, tenantId, userId, req
 // Add enterprise Bucket Object
 function addEnterpriseBucketObject(fintechToken, idempotencyKey, tenantId, enterpriseId, request) {
   return baseUrl
-    .post(`/rest/v1/fintech/tenants/${tenantId}/enterprises/${enterpriseId}/bucketObjects`)
+    .post(`/rest/v1/bucket/tenants/${tenantId}/enterprises/${enterpriseId}/bucketObjects`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -48,8 +48,9 @@ function addBucketObjectFile(uploadPath, pic) {
     .post(uploadPath)
     .send(pic)
     //.set('Accept', 'application/octet-stream')
-    .expect(200)
+    //.expect(200)
     .then(result => {
+      //console.log(JSON.stringify(result))
       const bucket = result.text;
       return bucket;
     });

@@ -5,7 +5,9 @@ chai.should();
 const api = require('./api/api');
 const fs = require('fs');
 
-const state = {};
+const state = {
+    token: "token"
+};
 
 
 if (process.env.OWNER_ID == undefined || process.env.ACCOUNT_ID == undefined || process.env.ACCOUNT_TYPE == undefined || process.env.KYC_ID == undefined) {
@@ -41,18 +43,18 @@ describe("Get user account ASP references. You can use this kyc reference to req
    * Token 
    */
 
-  it('should create token', function() {
-    return api.core.createServerToken(
-    	api.core.CLIENT_TENANT_ID, 
-    	api.core.CLIENT_SECRET, 
-    	'client_credentials',
-    	['identity', 'account'])
-    .then(function(token) { 
-      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
-      console.log(`token: ${token}`)
-    	state.token = token
-    });
-  });
+//  it('should create token', function() {
+//    return api.core.createServerToken(
+//    	api.core.CLIENT_TENANT_ID,
+//    	api.core.CLIENT_SECRET,
+//    	'client_credentials',
+//    	['identity', 'account'])
+//    .then(function(token) {
+//      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
+//      console.log(`token: ${token}`)
+//    	state.token = token
+//    });
+//  });
 
   // Account KYC
   it('should get kyc account', function() {   

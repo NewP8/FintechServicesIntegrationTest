@@ -5,7 +5,9 @@ chai.should();
 const api = require('./api/api');
 const fs = require('fs');
 
-const state = {};
+const state = {
+    token: "token"
+};
 
 describe("User: create account and qr request", function() {
 	this.timeout(60000);
@@ -29,18 +31,18 @@ describe("User: create account and qr request", function() {
    * Token 
    */
 
-  it('should create token', function() {
-    return api.core.createServerToken(
-    	api.core.CLIENT_TENANT_ID, 
-    	api.core.CLIENT_SECRET, 
-    	'client_credentials',
-    	['identity', 'account'])
-    .then(function(token) { 
-      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
-      console.log(`token: ${token}`)
-    	state.token = token
-    });
-  });
+//  it('should create token', function() {
+//    return api.core.createServerToken(
+//    	api.core.CLIENT_TENANT_ID,
+//    	api.core.CLIENT_SECRET,
+//    	'client_credentials',
+//    	['identity', 'account'])
+//    .then(function(token) {
+//      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
+//      console.log(`token: ${token}`)
+//    	state.token = token
+//    });
+//  });
 
   /* 
    * User A
@@ -139,8 +141,6 @@ describe("User: create account and qr request", function() {
       api.core.CLIENT_TENANT_ID,
       req)
     .then (function(qr) {
-      console.log(qr)
-
       state.qr = qr
       console.log(`qrCreditTransferId A: ${qr.qrCreditTransferId}`)
     });
@@ -159,14 +159,9 @@ describe("User: create account and qr request", function() {
       state.qr.qrCreditTransferId,
       req)
     .then (function(qr) {
-      console.log(qr)
-
       state.qr = qr
       console.log(`qrCreditTransferId A: ${qr.qrCreditTransferId}`)
     });
   });
-
-
-
 });
 

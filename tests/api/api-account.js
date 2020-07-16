@@ -141,13 +141,15 @@ function addAccountKYC(fintechToken, idempotencyKey, tenantId, accountType, owne
 
 
   function getKycFromId(fintechToken, tenantId, accountType, ownerId, accountId, kycId) {
+    console.log(accountType)
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs/${kycId}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs/${kycId}`)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .set('Authorization', `Bearer ${fintechToken}`)
-        .expect(200)
+        //.expect(200)
         .then(result => {
+            console.log(result)
             const kyc = result.body;
             expect(kyc).to.be.an('object', "Couldn't get kyc required documents");
             return kyc;
@@ -163,10 +165,9 @@ function createEnterpriseFintech(fintechToken, idempotencyKey, tenantId, enterpr
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
     .set('Idempotency-Key', idempotencyKey)
-    //.expect('Content-Type', /json/)
-    //.expect(200)
+    .expect('Content-Type', /json/)
+    .expect(200)
     .then(result => {
-      console.log(result)
       const enterprise = result.body;
       expect(enterprise).to.be.an('object', "Couldn't get enterprise");
       return enterprise;

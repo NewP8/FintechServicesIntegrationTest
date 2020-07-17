@@ -16,7 +16,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 function createServerToken(clientId, clientSecret, grant_type, scope) {
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
     return baseUrl
-        .get('/rest/v1/oauth2/token')
+        .get('/rest/oauth2/token')
         .query({grant_type:grant_type, scope:scope})
         .set('Authorization', `Basic ${credentials}`)
         .expect(200)
@@ -29,7 +29,7 @@ function createServerToken(clientId, clientSecret, grant_type, scope) {
 
 function createUserToken(token, tenantId, userId) {
     return baseUrl
-        .post(`/rest/v1/account/tenants/${tenantId}/users/${userId}/tokens`)
+        .post(`/rest/account/tenants/${tenantId}/users/${userId}/tokens`)
         .send({scopes: []})
           .set('Accept', 'application/json')
           .set('Authorization', `Bearer ${token}`)
@@ -47,7 +47,7 @@ function createUserToken(token, tenantId, userId) {
 
 function addWebHook(token, tenantId, idempotencyKey, webhookRequest) {
   return baseUrl
-  .post(`/rest/v1/fintech/tenants/${tenantId}/hooks`)
+  .post(`/rest/fintech/tenants/${tenantId}/hooks`)
   .set('Idempotency-Key', idempotencyKey)
   .send(webhookRequest)
     .set('Accept', 'application/json')

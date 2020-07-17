@@ -10,7 +10,7 @@ const baseUrl = request(baseUrlPath);
 
 function addAccountLinkedBank(token, idempotencyKey, tenantId, accountType, ownerId, accountId, requestLikedBank) {
     return baseUrl
-        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks`)
+        .post(`/rest/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks`)
         .send(requestLikedBank)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')
@@ -26,7 +26,7 @@ function addAccountLinkedBank(token, idempotencyKey, tenantId, accountType, owne
 
 function findAllAccountLinkedBanksFromOwnerId(token, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks`)
+        .get(`/rest/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -40,7 +40,7 @@ function findAllAccountLinkedBanksFromOwnerId(token, tenantId, accountType, owne
 
 function findAccountLinkedBankFromBankId(token, tenantId, accountType, ownerId, accountId, bankId) {
     return baseUrl
-        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${bankId}`)
+        .get(`/rest/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${bankId}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)

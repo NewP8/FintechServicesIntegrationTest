@@ -13,7 +13,7 @@ const baseUrl = request(baseUrlPath);
 
 function setQrAuths(fintechToken, tenantId) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/qrauths`)
+        .post(`/rest/fintech/tenants/${tenantId}/qrauths`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${fintechToken}`)
         .expect('Content-Type', /json/)
@@ -29,7 +29,7 @@ function setQrAuths(fintechToken, tenantId) {
 
 function setQrAuthsToken(fintechToken, tenantId, qrAuthTokenId, userId) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/qrauths/${qrAuthTokenId}/users/${userId}`)
+        .post(`/rest/fintech/tenants/${tenantId}/qrauths/${qrAuthTokenId}/users/${userId}`)
         .send({})
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${fintechToken}`)

@@ -12,7 +12,7 @@ const baseUrl = request(baseUrlPath);
 
 function createUserFintech(fintechToken, idempotencyKey, tenantId, userRequest) {
   return baseUrl
-    .post(`/rest/v1/identity/tenants/${tenantId}/users`)
+    .post(`/rest/identity/tenants/${tenantId}/users`)
     .send(userRequest)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
@@ -29,7 +29,7 @@ function createUserFintech(fintechToken, idempotencyKey, tenantId, userRequest) 
 
 function updateUserFromId(fintechToken, tenantId, userId, request) {
   return baseUrl
-    .put(`/rest/v1/identity/tenants/${tenantId}/users/${userId}`)
+    .put(`/rest/identity/tenants/${tenantId}/users/${userId}`)
     .send(request)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
@@ -44,7 +44,7 @@ function updateUserFromId(fintechToken, tenantId, userId, request) {
 
 function getUserPictureFromId(fintechToken, tenantId, userId) {
   return baseUrl
-    .get(`/rest/v1/identity/tenants/${tenantId}/users/${userId}/picture`)
+    .get(`/rest/identity/tenants/${tenantId}/users/${userId}/picture`)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
     .expect(200)
@@ -56,7 +56,7 @@ function getUserPictureFromId(fintechToken, tenantId, userId) {
 
 function addPersonalAccountFintech(fintechToken, idempotencyKey, tenantId, ownerId, request) {
   return baseUrl
-    .post(`/rest/v1/account/tenants/${tenantId}/personal/${ownerId}/accounts`)
+    .post(`/rest/account/tenants/${tenantId}/personal/${ownerId}/accounts`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -73,7 +73,7 @@ function addPersonalAccountFintech(fintechToken, idempotencyKey, tenantId, owner
 
 function updatePersonalAccountFintech(fintechToken, tenantId, ownerId, accountId, request) {
   return baseUrl
-    .put(`/rest/v1/account/tenants/${tenantId}/personal/${ownerId}/accounts/${accountId}`)
+    .put(`/rest/account/tenants/${tenantId}/personal/${ownerId}/accounts/${accountId}`)
     .send(request)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
@@ -92,7 +92,7 @@ function updatePersonalAccountFintech(fintechToken, tenantId, ownerId, accountId
 // Documents
 function createUserDocument(fintechToken, idempotencyKey, tenantId, ownerId, request) {
   return baseUrl
-    .post(`/rest/v1/identity/tenants/${tenantId}/users/${ownerId}/documents`)
+    .post(`/rest/identity/tenants/${tenantId}/users/${ownerId}/documents`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -109,7 +109,7 @@ function createUserDocument(fintechToken, idempotencyKey, tenantId, ownerId, req
 // KYC
 function getKycRequiredDocuments(fintechToken, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycRequiredDocuments`)
+        .get(`/rest/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycRequiredDocuments`)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .set('Authorization', `Bearer ${fintechToken}`)
@@ -125,7 +125,7 @@ function getKycRequiredDocuments(fintechToken, tenantId, accountType, ownerId, a
 
 function addAccountKYC(fintechToken, idempotencyKey, tenantId, accountType, ownerId, accountId, KycRequest) {
     return baseUrl
-        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs`)
+        .post(`/rest/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs`)
         .send(KycRequest)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')
@@ -143,7 +143,7 @@ function addAccountKYC(fintechToken, idempotencyKey, tenantId, accountType, owne
   function getKycFromId(fintechToken, tenantId, accountType, ownerId, accountId, kycId) {
     console.log(accountType)
     return baseUrl
-        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs/${kycId}`)
+        .get(`/rest/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/kycs/${kycId}`)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .set('Authorization', `Bearer ${fintechToken}`)
@@ -160,7 +160,7 @@ function addAccountKYC(fintechToken, idempotencyKey, tenantId, accountType, owne
 // Enterprise
 function createEnterpriseFintech(fintechToken, idempotencyKey, tenantId, enterprisesRequest) {
   return baseUrl
-    .post(`/rest/v1/identity/tenants/${tenantId}/enterprises`)
+    .post(`/rest/identity/tenants/${tenantId}/enterprises`)
     .send(enterprisesRequest)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
@@ -177,7 +177,7 @@ function createEnterpriseFintech(fintechToken, idempotencyKey, tenantId, enterpr
 
 function updateEnterpriseFromId(fintechToken, tenantId, enterpriseId, request) {
   return baseUrl
-    .put(`/rest/v1/identity/tenants/${tenantId}/enterprises/${enterpriseId}`)
+    .put(`/rest/identity/tenants/${tenantId}/enterprises/${enterpriseId}`)
     .send(request)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
@@ -192,7 +192,7 @@ function updateEnterpriseFromId(fintechToken, tenantId, enterpriseId, request) {
 
 function getBusinessLogoFromId(fintechToken, tenantId, enterpriseId) {
   return baseUrl
-    .get(`/rest/v1/identity/tenants/${tenantId}/enterprises/${enterpriseId}/logo`)
+    .get(`/rest/identity/tenants/${tenantId}/enterprises/${enterpriseId}/logo`)
     .set('Accept', 'application/json')
     .set('Authorization', `Bearer ${fintechToken}`)
     .expect(200)
@@ -204,7 +204,7 @@ function getBusinessLogoFromId(fintechToken, tenantId, enterpriseId) {
 
 function addBusinessAccountFintech(fintechToken, idempotencyKey, tenantId, ownerId, request) {
   return baseUrl
-    .post(`/rest/v1/account/tenants/${tenantId}/business/${ownerId}/accounts`)
+    .post(`/rest/account/tenants/${tenantId}/business/${ownerId}/accounts`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -222,7 +222,7 @@ function addBusinessAccountFintech(fintechToken, idempotencyKey, tenantId, owner
 
 function createEnterpriseDocument(fintechToken, idempotencyKey, tenantId, ownerId, request) {
   return baseUrl
-    .post(`/rest/v1/identity/tenants/${tenantId}/enterprises/${ownerId}/documents`)
+    .post(`/rest/identity/tenants/${tenantId}/enterprises/${ownerId}/documents`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')

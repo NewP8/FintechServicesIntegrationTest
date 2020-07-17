@@ -12,7 +12,7 @@ const baseUrl = request(baseUrlPath);
 // Add user Bucket Object
 function addUserBucketObject(fintechToken, idempotencyKey, tenantId, userId, request) {
   return baseUrl
-    .post(`/rest/v1/bucket/tenants/${tenantId}/bucketsName/${userId}/objects`)
+    .post(`/rest/bucket/tenants/${tenantId}/bucketsName/${userId}/objects`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')
@@ -29,7 +29,7 @@ function addUserBucketObject(fintechToken, idempotencyKey, tenantId, userId, req
 // Add enterprise Bucket Object
 function addEnterpriseBucketObject(fintechToken, idempotencyKey, tenantId, enterpriseId, request) {
   return baseUrl
-    .post(`/rest/v1/bucket/tenants/${tenantId}/bucketsName/${enterpriseId}/objects`)
+    .post(`/rest/bucket/tenants/${tenantId}/bucketsName/${enterpriseId}/objects`)
     .send(request)
     .set('Idempotency-Key', idempotencyKey)
     .set('Accept', 'application/json')

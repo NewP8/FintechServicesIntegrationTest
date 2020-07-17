@@ -25,7 +25,7 @@ securityDefinitions:
   OauthSecurityApplication:
     type: oauth2
     flow: application
-    tokenUrl: 'https://api.sandbox.lightbankingservices.com/rest/v1/oauth2/token'
+    tokenUrl: 'https://api.sandbox.lightbankingservices.com/rest/oauth2/token'
     scopes:
       client: Client scope
 
@@ -35,7 +35,7 @@ produces:
 ########## OAuth2 token ##########
 
 paths:
-  '/rest/v1/oauth2/token':
+  '/rest/oauth2/token':
     get:
       summary: Obtain a bearer token
       description: >
@@ -77,7 +77,7 @@ paths:
 
 ########## Users ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/users':
+  '/rest/fintech/tenants/{tenantId}/users':
     post:
       summary: Create a User object
       description: >-
@@ -168,7 +168,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}':
     get:
       summary: Find the specified User object.
       description: >-
@@ -265,7 +265,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/picture':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}/picture':
     get:
       summary: Get the user picture.
       description: >-
@@ -312,7 +312,7 @@ paths:
 
 ########## User Documents ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/documents':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}/documents':
     post:
       summary: Create a User Document object.
       description: >-
@@ -437,7 +437,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/documents/{documentId}':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}/documents/{documentId}':
     get:
       summary: Find the specified User Document object.
       description: >-
@@ -493,7 +493,7 @@ paths:
               
 ########## Enterprises ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises':
+  '/rest/fintech/tenants/{tenantId}/enterprises':
     post:
       summary: Create an Enterprise object
       description: >-
@@ -584,7 +584,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}':
     get:
       summary: Find the specified Enterprise object.
       description: >-
@@ -681,7 +681,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/logo':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/logo':
     get:
       summary: Get the enterprise logo.
       description: >-
@@ -727,7 +727,7 @@ paths:
 
 ########## Enterprise Documents ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/documents':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/documents':
     post:
       summary: Create a Enterprise Document object.
       description: >-
@@ -852,7 +852,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/documents/{documentId}':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/documents/{documentId}':
     get:
       summary: Find the specified Enterprise Document object.
       description: >-
@@ -911,7 +911,7 @@ paths:
 
 ########## User Accounts ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/accounts':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}/accounts':
     post:
       summary: Create an Account object.
       description: >-
@@ -1027,7 +1027,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/accounts/{accountId}':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}/accounts/{accountId}':
     get:
       summary: Find the specified User Account object.
       operationId: GetUserAccount
@@ -1144,7 +1144,7 @@ paths:
               
 ########## Enterprise Accounts ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/accounts':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/accounts':
     post:
       summary: Create an Account object.
       description: >-
@@ -1260,7 +1260,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/accounts/{accountId}':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/accounts/{accountId}':
     get:
       summary: Find the specified Enterprise Account object.
       operationId: GetEnterpriseAccount
@@ -1376,7 +1376,7 @@ paths:
               
 
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/balance':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/balance':
     get:
       summary: Account Balance
       description: >-
@@ -1446,7 +1446,7 @@ paths:
               $ref: '#/definitions/Error'
 
 ########## Accounts KYC ##########
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycs':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycs':
     post:
       summary: Request needed to begin a KYC procedure
       description: >-
@@ -1598,7 +1598,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycs/{kycId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycs/{kycId}':
     get:
       summary: Find the specified Account KYC.
       description: Find the specified Account KYC request.
@@ -1666,7 +1666,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycRequiredDocuments':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/kycRequiredDocuments':
     get:
       summary: Documents type required for the KYC process
       description: >-
@@ -1730,7 +1730,7 @@ paths:
 
 ########## Cards ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards':
     post:
       summary: Link a new Card (Debit/Credit) to User Account.
       description: >-
@@ -1879,7 +1879,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}':
     get:
       summary: Specific Account Linked Card.
       description: Find the specified Account Linked Card.
@@ -2090,7 +2090,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCardsTestCards':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCardsTestCards':
     get:
       summary: Obtain a list of Test Cards (Debit/Credit) that can be used to Sandbox environment.
       description: >-
@@ -2145,7 +2145,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/default':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/default':
     put:
       summary: Set the default Card.
       description: >-
@@ -2209,7 +2209,7 @@ paths:
               $ref: '#/definitions/Error'
 
 ########## Cash In ##########
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashIns':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashIns':
     post:
       summary: Transfer money from Linked Card to Account.
       description: >-
@@ -2391,7 +2391,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Error'
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashIns/{transactionId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashIns/{transactionId}':
     get:
       summary: Find the specified Cash In transaction.
       description: Find the specified Account Linked Card Cash In transaction.
@@ -2463,7 +2463,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashInsFee':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedCards/{linkedCardId}/cashInsFee':
     get:
       summary: Get Fee from Cash In.
       description: Returns the Fee from Cash In Linked Card.
@@ -2542,7 +2542,7 @@ paths:
 
 ########## Bank Account ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks':
     post:
       summary: Link a new Bank Account to User Account.
       description: >-
@@ -2693,7 +2693,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}':
     get:
       summary: Specific Account Linked Bank.
       description: Find the specified Account Linked Bank.
@@ -2761,7 +2761,7 @@ paths:
 
 ########## Cash Out ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOuts':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOuts':
     post:
       summary: Transfer money from Account to Bank.
       description: >-
@@ -2944,7 +2944,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOuts/{transactionId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOuts/{transactionId}':
     get:
       summary: Find the specified Cash Out transaction.
       description: Find the specified Account Linked Card Bank Out transaction.
@@ -3016,7 +3016,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOutsFee':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/linkedBanks/{linkedBankId}/cashOutsFee':
     get:
       summary: Get Fee from Cash Out.
       description: Returns the Fee from Cash Out Linked Bank.
@@ -3094,7 +3094,7 @@ paths:
               $ref: '#/definitions/Error'
 
 ########## Users Account Transactions ##########
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transactions':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transactions':
     get:
       summary: Get transactions.
       description: >-
@@ -3169,7 +3169,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transactions/{transactionId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transactions/{transactionId}':
     get:
       summary: Get specified Transaction.
       description: Returns the specified transaction of the User Account selected.
@@ -3236,7 +3236,7 @@ paths:
               $ref: '#/definitions/Error'
               
 ## Transfers ###
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transfers':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transfers':
     post:
       summary: Transfer money from one account to another.
       description: >-
@@ -3397,7 +3397,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transfers/{transferId}':
+  '/rest/fintech/tenants/{tenantId}/{accountType}/{ownerId}/accounts/{accountId}/transfers/{transferId}':
     get:
       summary: Find the specified transfer.
       description: Find the specified Transfer.
@@ -3468,7 +3468,7 @@ paths:
 
 ########## Web Hooks ##########
 
-  '/rest/v1/fintech/tenants/{tenantId}/hooks':
+  '/rest/fintech/tenants/{tenantId}/hooks':
     post:
       summary: Post Web Hook.
       description: >-
@@ -3549,7 +3549,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/hooks/{webHookId}':
+  '/rest/fintech/tenants/{tenantId}/hooks/{webHookId}':
     get:
       summary: Get specific Web Hooks.
       description: Find specific web hook object.
@@ -3646,7 +3646,7 @@ paths:
               $ref: '#/definitions/Error'
 
 ########## SMS Telephone Service ##########
-  '/rest/v1/fintech/tenants/{tenantId}/telephoneSMS':
+  '/rest/fintech/tenants/{tenantId}/telephoneSMS':
     post:
       summary: Send SMS.
       description: >-
@@ -3701,7 +3701,7 @@ paths:
               $ref: '#/definitions/Error'
 
 ########## Notification ##########
-  '/rest/v1/fintech/tenants/{tenantId}/notification':
+  '/rest/fintech/tenants/{tenantId}/notification':
     post:
       summary: Send Notification.
       description: >-
@@ -3742,7 +3742,7 @@ paths:
               $ref: '#/definitions/Error'
 
 ########## Bucket ##########
-  '/rest/v1/fintech/tenants/{tenantId}/users/{userId}/bucketObjects':
+  '/rest/fintech/tenants/{tenantId}/users/{userId}/bucketObjects':
     post:
       summary: Add a bucket object for the user.
       description: >-
@@ -3790,7 +3790,7 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-  '/rest/v1/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/bucketObjects':
+  '/rest/fintech/tenants/{tenantId}/enterprises/{enterpriseId}/bucketObjects':
     post:
       summary: Add a bucket object for the enterprise.
       description: >-

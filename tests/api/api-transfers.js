@@ -10,7 +10,7 @@ const baseUrl = request(baseUrlPath);
 
 function addTransfer(token, idempotencyKey, tenantId, accountType, ownerId, accountId, req) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/transfers`)
+        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/transfers`)
         .send(req)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')
@@ -26,7 +26,7 @@ function addTransfer(token, idempotencyKey, tenantId, accountType, ownerId, acco
 
 function findTransactionDetailedFromTransactionId(token, tenantId, accountType, ownerId, accountId, transactionId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/transactions/${transactionId}/detailed`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/transactions/${transactionId}/detailed`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -41,7 +41,7 @@ function findTransactionDetailedFromTransactionId(token, tenantId, accountType, 
 // balance
 function accountBalance(token, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/balance`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/balance`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)

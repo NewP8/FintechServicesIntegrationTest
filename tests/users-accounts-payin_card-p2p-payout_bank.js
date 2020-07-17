@@ -29,18 +29,18 @@ describe("User: create accounts for user A and user B, payin user A via card, p2
    * Token 
    */
 
-  it('should create token', function() {
-    return api.core.createServerToken(
-    	api.core.CLIENT_TENANT_ID, 
-    	api.core.CLIENT_SECRET, 
-    	'client_credentials',
-    	['identity', 'account'])
-    .then(function(token) { 
-      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
-      console.log(`token: ${token}`)
-    	state.token = token
-    });
-  });
+//  it('should create token', function() {
+//    return api.core.createServerToken(
+//    	api.core.CLIENT_TENANT_ID,
+//    	api.core.CLIENT_SECRET,
+//    	'client_credentials',
+//    	['identity', 'account'])
+//    .then(function(token) {
+//      console.log(`tenantId: ${api.core.CLIENT_TENANT_ID}`)
+//      console.log(`token: ${token}`)
+//    	state.token = token
+//    });
+//  });
 
   /* 
    * User A

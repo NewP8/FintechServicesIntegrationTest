@@ -10,7 +10,7 @@ const baseUrl = request(baseUrlPath);
 
 function addAccountLinkedCard(token, idempotencyKey, tenantId, accountType, ownerId, accountId, requestLikedCard) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards`)
+        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards`)
         .send(requestLikedCard)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')
@@ -26,7 +26,7 @@ function addAccountLinkedCard(token, idempotencyKey, tenantId, accountType, owne
 
 function findAllAccountLinkedCardsFromOwnerId(token, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -40,7 +40,7 @@ function findAllAccountLinkedCardsFromOwnerId(token, tenantId, accountType, owne
 
 function findAccountLinkedCardFromCardId(token, tenantId, accountType, ownerId, accountId, cardId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -54,7 +54,7 @@ function findAccountLinkedCardFromCardId(token, tenantId, accountType, ownerId, 
 
 function updateAccountLinkedCardTSPRefsFromId(token, tenantId, accountType, ownerId, accountId, cardId, tspRefsRequest) {
     return baseUrl
-        .put(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}`)
+        .put(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}`)
         .send(tspRefsRequest)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
@@ -70,7 +70,7 @@ function updateAccountLinkedCardTSPRefsFromId(token, tenantId, accountType, owne
 
 function findAllAccountLinkedTestCards(token, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCardsTestCards`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCardsTestCards`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -84,7 +84,7 @@ function findAllAccountLinkedTestCards(token, tenantId, accountType, ownerId, ac
 
 function updateLinkedCardDefaultFromCardId(token, tenantId, accountType, ownerId, accountId) {
     return baseUrl
-        .put(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}/default`)
+        .put(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}/default`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -98,7 +98,7 @@ function updateLinkedCardDefaultFromCardId(token, tenantId, accountType, ownerId
 
 function deleteAccountLinkedCard(token, tenantId, accountType, ownerId, accountId, cardId) {
     return baseUrl
-        .delete(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}`)
+        .delete(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${cardId}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect(200)

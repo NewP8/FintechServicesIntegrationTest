@@ -10,7 +10,7 @@ const baseUrl = request(baseUrlPath);
 
 function addLinkedCardCashIn(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedCardId, cashInRequest) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashIns`)
+        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashIns`)
         .send(cashInRequest)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')
@@ -26,7 +26,7 @@ function addLinkedCardCashIn(token, idempotencyKey, tenantId, accountType, owner
 
 function findAllLinkedCardCashInFromCardId(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedCardId, offset, limit) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashIns?offset=${offset}&limit=${limit}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashIns?offset=${offset}&limit=${limit}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)   
@@ -40,7 +40,7 @@ function findAllLinkedCardCashInFromCardId(token, idempotencyKey, tenantId, acco
 
 function findLinkedCardCashInFromTransactionId(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedCardId, transactionId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashIns/${transactionId}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashIns/${transactionId}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -54,7 +54,7 @@ function findLinkedCardCashInFromTransactionId(token, idempotencyKey, tenantId, 
 
 function getLinkedCardCashInFee(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedCardId, amount, currency) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashInsFee?amount=${amount}&currency=${currency}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedCards/${linkedCardId}/cashInsFee?amount=${amount}&currency=${currency}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)

@@ -10,7 +10,7 @@ const baseUrl = request(baseUrlPath);
 
 function addLinkedBankCashOut(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedBankId, cashOutRequest) {
     return baseUrl
-        .post(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOuts`)
+        .post(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOuts`)
         .send(cashOutRequest)
         .set('Idempotency-Key', idempotencyKey)
         .set('Accept', 'application/json')
@@ -26,7 +26,7 @@ function addLinkedBankCashOut(token, idempotencyKey, tenantId, accountType, owne
 
 function findAllLinkedBankCashOutFromBankId(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedBankId, offset, limit) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOuts?offset=${offset}&limit=${limit}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOuts?offset=${offset}&limit=${limit}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)   
@@ -40,7 +40,7 @@ function findAllLinkedBankCashOutFromBankId(token, idempotencyKey, tenantId, acc
 
 function findLinkedBankCashOutFromTransactionId(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedBankId, transactionId) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOuts/${transactionId}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOuts/${transactionId}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
@@ -54,7 +54,7 @@ function findLinkedBankCashOutFromTransactionId(token, idempotencyKey, tenantId,
 
 function getLinkedBankCashOutFee(token, idempotencyKey, tenantId, accountType, ownerId, accountId, linkedBankId, amount, currency) {
     return baseUrl
-        .get(`/rest/v1/fintech/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOutsFee?amount=${amount}&currency=${currency}`)
+        .get(`/rest/v1/account/tenants/${tenantId}/${accountType}/${ownerId}/accounts/${accountId}/linkedBanks/${linkedBankId}/cashOutsFee?amount=${amount}&currency=${currency}`)
         .set('Accept', 'application/json')
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /json/)
